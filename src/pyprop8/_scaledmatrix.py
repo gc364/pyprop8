@@ -1,5 +1,5 @@
 import torch as np
-
+np.set_default_dtype(np.float64)
 """
 This module implements operations on exponentially-scaled matrices. This allows
 stable computation of matrix-matrix and matrix-vector products in cases where elements may
@@ -124,8 +124,8 @@ class ScaledMatrixStack:
         if dest is None:
             return ScaledMatrixStack(self.M, self.scale, clone=True)
         else:
-            np.cloneto(dest.M, self.M)
-            np.cloneto(dest.scale, self.scale)
+            dest.M = np.clone(self.M)
+            dest.scale = np.clone(self.scale)
             return dest
 
     def rescale(self):
@@ -199,17 +199,17 @@ class ScaledMatrixStack:
             return ScaledMatrixStack(self.M @ other.M, self.scale + other.scale)
         elif out is self:
             self.M = np.matmul(
-                self.M, other.M, out=self.M
+                self.M, other.M, 
             )  # In-place not yet supported...
             self.scale += other.scale
             return self
         elif out is other:
-            other.M = np.matmul(self.M, other.M, out=other.M)
+            other.M = np.matmul(self.M, other.M)
             other.scale += self.scale
             return other
         else:
-            np.matmul(self.M, other.M, out=out.M)
-            np.add(self.scale, other.scale, out=out.scale)
+            out.M = np.matmul(self.M, other.M)
+            out.scale  =np.add(self.scale, other.scale)
             return out
 
     def add(self, other, out=None):
@@ -242,12 +242,13 @@ class ScaledMatrixStack:
             other.scale = maxsc
             return other
         else:
-            maxsc = np.maximum(self.scale, other.scale, out=out.scale)
-            np.multiply(self.M, np.exp(self.scale - maxsc).reshape(-1, 1, 1), out=out.M)
-            np.add(
+            maxsc = np.maximum(self.scale, other.scale)
+            out.scale = np.maximum(self.scale, other.scale)
+            out.M = np.multiply(self.M, np.exp(self.scale - maxsc).reshape(-1, 1, 1))
+            out.M = np.add(
                 out.M,
                 other.M * np.exp(other.scale - maxsc).reshape(-1, 1, 1),
-                out=out.M,
+                
             )
             return out
 
@@ -277,20 +278,21 @@ class ScaledMatrixStack:
         elif out is other:
             maxsc = np.maximum(self.scale, other.scale)
             other.M *= np.exp(other.scale - maxsc).reshape(-1, 1, 1)
-            np.subtract(
+            other.M = np.subtract(
                 self.M * np.exp(self.scale - maxsc).reshape(-1, 1, 1),
                 other.M,
-                out=other.M,
+               
             )
             other.scale = maxsc
             return other
         else:
-            maxsc = np.maximum(self.scale, other.scale, out=out.scale)
-            np.multiply(self.M, np.exp(self.scale - maxsc).reshape(-1, 1, 1), out=out.M)
-            np.subtract(
+            maxsc = np.maximum(self.scale, other.scale)
+            out.scale = np.maximum(self.scale, other.scale)
+            out.M = np.multiply(self.M, np.exp(self.scale - maxsc).reshape(-1, 1, 1))
+            out.M, =  np.subtract(
                 out.M,
                 other.M * np.exp(other.scale - maxsc).reshape(-1, 1, 1),
-                out=out.M,
+                
             )
             return out
 
@@ -317,8 +319,8 @@ class ScaledMatrixStack:
             other.scale += self.scale
             return other
         else:
-            np.multiply(self.M, other.M, out=out.M)
-            np.add(self.scale, other.scale, out=out.scale)
+            out.M = np.multiply(self.M, other.M)
+            out.scale = np.add(self.scale, other.scale)
             return out
 
     def scalarMultiply(self, other, out=None):
@@ -354,8 +356,8 @@ class ScaledMatrixStack:
             self.scale -= other.scale
             return self
         else:
-            np.divide(self.M, other.M, out=out.M)
-            np.subtract(self.scale, other.scale, out=out.scale)
+            out.M = np.divide(self.M, other.M)
+            out.scale = np.subtract(self.scale, other.scale)
             return out
 
     def __add__(self, other):

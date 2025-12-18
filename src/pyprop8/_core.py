@@ -269,14 +269,16 @@ class LayeredStructureModel:
             - ``added`` - list, possibly empty, indicating whether an entry in ``*args`` required creation of an additional layer (``True``) or if an interface already existed at that depth (``False``).
 
         """
-        dz = self.dz.clone()
-        sigma = self.sigma.clone()
-        mu = self.mu.clone()
-        rho = self.rho.clone()
+        dz = self.dz.clone().to(np.float64)
+        sigma = self.sigma.clone().to(np.float64)
+        mu = self.mu.clone().to(np.float64)
+        rho = self.rho.clone().to(np.float64)
         N = dz.shape[0]
         indices = []
         pseudo = []
         for interface in interfaces:
+            if type(interface) == np.Tensor:
+                interface = interface.to(np.float64)
             z = 0
             for ilayer in range(N):
                 if interface < z + dz[ilayer]:
@@ -383,9 +385,9 @@ class ReceiverSet:
         """
         Performs sanity checks on receivers
         """
-        if np.any(self.rr < 0):
+        if np.any(np.abs(self.rr) < 0):
             raise ValueError("Some receivers appear to be at negative radii")
-        if np.any(self.rr > 200):
+        if np.any(np.abs(self.rr) > 200):
             warnings.warn(
                 "Source-receiver distances exceed 200 km. Flat-earth approximation may not be appropriate. ",
                 RuntimeWarning,
@@ -563,7 +565,7 @@ class ListOfReceivers(ReceiverSet):
         self.nr = self.xx.shape[0]
         if self.geometry == "cartesian":
             self.rr = np.sqrt((self.xx - event_x) ** 2 + (self.yy - event_y) ** 2)
-            self.pp = np.arctan2(self.yy - event_y, self.xx - event_x)
+            self.pp = np.arctan2((self.yy - event_y).to(np.float64), (self.xx - event_x).to(np.float64))
         elif self.geometry == "spherical":
             self.rr = gc_dist(
                 np.deg2rad(self.yy),
@@ -950,14 +952,14 @@ def compute_spectra(
     # )
 
     ##Returns nans for small values Bessel function problem
-    jv = spec.jv(mm, np.outer(k, stations.rr).flatten(0,1).repeat(5,1).T).reshape(
+    jv = spec.jv(mm, np.outer(k, stations.rr).flatten(0,1).repeat(5,1).T.to(np.complex128)).reshape(
         nk, nr, 5
     )
     
     # jvp = spec.jvp(np.tile(mm, [nr * nk]), np.outer(k, stations.rr).repeat_interleave(5)).reshape(
     #     nk, nr, 5
     # )
-    jvp = spec.jvp(mm, np.outer(k, stations.rr).flatten(0,1).repeat(5,1).T,1).reshape(
+    jvp = spec.jvp(mm, np.outer(k, stations.rr).flatten(0,1).repeat(5,1).T.to(np.complex128),1).reshape(
         nk, nr, 5
     )
     if do_derivatives:
@@ -971,18 +973,18 @@ def compute_spectra(
                     [[0, 0, 1], [0, 0, 0], [1, 0, 0]],
                     [[0, 0, 0], [0, 0, 1], [0, 1, 0]],
                 ],
-                dtype=np.float64,
+                dtype=np.complex128,
             )
         if derivatives.force:
             d_F = np.tensor(
-                [[[1], [0], [0]], [[0], [1], [0]], [[0], [0], [1]]],  dtype=np.float64
+                [[[1], [0], [0]], [[0], [1], [0]], [[0], [0], [1]]],  dtype=np.complex128
             )
         if derivatives.r or derivatives.x or derivatives.y:
             # djvp_dr = spec.jvp(
             #     np.tile(mm, nr * nk), np.outer(k, stations.rr).repeat_interleave(5), 2
             # ).reshape(nk, nr, 5) * k.reshape(-1, 1, 1)
             djvp_dr = spec.jvp(
-                mm,np.outer(k, stations.rr).flatten(0,1).repeat(5,1).T, 2
+                mm,np.outer(k, stations.rr).flatten(0,1).repeat(5,1).T.to(np.complex128), 2
             ).reshape(nk, nr, 5) * k.reshape(-1, 1, 1)
     # Allocate output data tensors
     if type(stations) is RegularlyDistributedReceivers:
@@ -1828,15 +1830,15 @@ def compute_seismograms(
             d_spectra = np.einsum(essd, d_spectra, tshift)
     # if kind == 'displacement':
     # Fourier integration -- transform without 1/(i w) and then integrate
-    stencil = np.tril(np.full([nt, nt + npad], dt, dtype=np.float64))
+    stencil = np.tril(np.full([nt, nt + npad], dt, dtype=np.complex128))
     stencil[np.arange(nt), np.arange(nt)] *= 0.5
     stencil[:, 0] *= 0.5
     stencil[0, 0] = 0
-    seis = (nt + npad) * delta_omega * np.fft.irfft(spectra, nt + npad) / (2 * np.pi)
+    seis = (nt + npad) * delta_omega * np.fft.irfft(spectra, nt + npad).to(np.complex128) / (2 * np.pi)
     seis = np.einsum(est, stencil, seis, np.exp(alpha * tt))
     if do_derivatives:
         deriv = (
-            (nt + npad) * delta_omega * np.fft.irfft(d_spectra, nt + npad) / (2 * np.pi)
+            (nt + npad) * delta_omega * np.fft.irfft(d_spectra, nt + npad).to(np.complex128) / (2 * np.pi)
         )
         deriv = np.einsum(estd, stencil, deriv, np.exp(alpha * tt))
     # This doesn't seem to be very stable. I wonder if the better way to get
@@ -1857,7 +1859,7 @@ def compute_seismograms(
     if xyz:
         # Rotate from (radial/transverse/z to xyz (enz))
         if type(stations) is RegularlyDistributedReceivers:
-            rotator = np.zeros([stations.nr, stations.nphi, 3, 3])
+            rotator = np.zeros([stations.nr, stations.nphi, 3, 3],dtype=np.complex128)
             phi = np.tile(stations.pp, stations.nr).reshape(stations.nr, stations.nphi)
             rotator[:, :, 0, 0] = np.cos(phi)
             rotator[:, :, 0, 1] = -np.sin(phi)
@@ -1867,7 +1869,7 @@ def compute_seismograms(
             esr = "rpic,srpct->srpit"
             esrd = "rpic,srpdct->srpdit"
         elif type(stations) is ListOfReceivers:
-            rotator = np.zeros([stations.nstations, 3, 3])
+            rotator = np.zeros([stations.nstations, 3, 3],dtype=np.complex128)
             rotator[:, 0, 0] = np.cos(stations.pp)
             rotator[:, 0, 1] = -np.sin(stations.pp)
             rotator[:, 1, 0] = np.sin(stations.pp)

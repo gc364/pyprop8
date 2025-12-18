@@ -1,6 +1,6 @@
 import torch as np
 from pyprop8 import _scaledmatrix as scm
-
+np.set_default_dtype(np.float64)
 ##################################
 ### Boundary condition vectors ###
 ##################################

@@ -3,8 +3,9 @@ sys.path.insert(1,'/Users/Oscar/OneDrive - Durham University/University/Year3/py
 import pyprop8 as pp
 from pyprop8.utils import stf_trapezoidal, make_moment_tensor, rtf2xyz
 import torch as np
+import matplotlib.pyplot as plt
 
-
+np.set_default_dtype(np.float64)
 def tests():
     print("Running tests. Using `pyprop8` from: %s" % pp.__file__)
     print("")
@@ -18,14 +19,37 @@ def tests():
             (np.inf, 8.0, 4.56, 3.34),
         ]
     )
+    strike = np.deg2rad(np.tensor(340))
+    dip = np.deg2rad(np.tensor(70))
+    rake = np.deg2rad(np.tensor(20))
+   
+    strike = strike.to(np.complex128)
+    dip = dip.to(np.complex128)
+    rake = rake.to(np.complex128)
+   
+    m0=np.tensor(2.4e8).to(np.complex128)
+    eta =np.tensor(0).to(np.complex128)
+    xtr =np.tensor(0).to(np.complex128)
 
+
+    strike.requires_grad_()
+    dip.requires_grad_()
+    rake.requires_grad_()
+   
+    m0.requires_grad_()
+    eta.requires_grad_()
+    xtr.requires_grad_()
+    Mrtp = make_moment_tensor(strike,dip,rake,m0,eta,xtr)
+
+    Mxyz = rtf2xyz(Mrtp)
+    Mxyz.requires_grad_()
     source = pp.PointSource(
-        0,
-        0,
-        20,
-        rtf2xyz(make_moment_tensor(340, 70, 20, 2.4e8, 0, 0)),
-        np.zeros([3, 1]),
-        0,
+        np.tensor(0.,requires_grad=True).to(np.complex128),
+        np.tensor(0.,requires_grad=True).to(np.complex128),
+        np.tensor(20.,requires_grad=True).to(np.complex128),
+        Mxyz,
+        np.zeros([3, 1],requires_grad=True).to(np.complex128),
+        np.tensor(0.,requires_grad=True).to(np.complex128),
     )
     stations = pp.RegularlyDistributedReceivers(
         30, 100, 7, 0, 360, 10, depth=3
@@ -37,12 +61,12 @@ def tests():
 
     print(" 2. Computing seismograms...")
 
-    nt = 33  # 257
-    dt = 0.5
+    nt = 60  # 257
+    dt = 1
     alpha = 0.023
     pad_frac = 1
 
-    tt, seis0, drv = pp.compute_seismograms(
+    tt, seis0,drv = pp.compute_seismograms(
         model,
         source,
         stations,
@@ -63,7 +87,7 @@ def tests():
     print("    a. Perturbing source in x.")
 
     source_x = source.clone()
-    source_x.x += epsilon
+    source_x.x = source_x.x+epsilon
 
     tt, seis_x = pp.compute_seismograms(
         model,
@@ -92,7 +116,7 @@ def tests():
 
     print("    b. Perturbing source in y.")
     source_y = source.clone()
-    source_y.y += epsilon
+    source_y.y =source_y.y + epsilon
 
     tt, seis_y = pp.compute_seismograms(
         model,
@@ -121,7 +145,7 @@ def tests():
 
     print("    c. Perturbing source in z.")
     source_z = source.clone()
-    source_z.dep -= epsilon  # coordinate system is z-up so a positive epsilon in z is a *reduction* in source depth
+    source_z.dep =source_z.dep -epsilon  # coordinate system is z-up so a positive epsilon in z is a *reduction* in source depth
 
     tt, seis_z = pp.compute_seismograms(
         model,
@@ -201,6 +225,21 @@ def tests():
         "       Worst-case difference between 'true' and finite-difference derivatives: %.3f%%"
         % (perc_err_z.max())
     )
+    print(seis0.requires_grad)
+    loss_fn = np.nn.L1Loss()
+    l = loss_fn(np.zeros_like(seis0,dtype=np.complex128),seis0)
+    print(l.dtype)
+    print(strike.grad_fn)
+    
+    l.backward()
+    
+    print(Mxyz.grad)
+    print(f'{strike.grad},{dip.grad},{rake.grad},{m0.grad},{eta.grad},{xtr.grad}')
+
+    fig,ax = plt.subplots()
+    ax.plot(tt.detach().numpy(),seis0[0,0].detach().numpy())
+    plt.show()
+    
     
 
 
