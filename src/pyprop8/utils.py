@@ -1,10 +1,10 @@
-import numpy as np
+import torch as np
 
 
 def stf_trapezoidal(omega, trise, trupt):
     """
     Trapezoidal source time function, in frequency domain. 
-    This routine is a copy of one in TBO'T's Matlab code, which is itself 
+    This routine is a clone of one in TBO'T's Matlab code, which is itself 
     apparently derived from AXITRA.
     
     The spectrum coded here is the Fourier Transform of the
@@ -18,7 +18,7 @@ def stf_trapezoidal(omega, trise, trupt):
 
     :returns: Amplitude of source time function
     """
-    uu = np.ones(omega.shape, dtype="complex128")
+    uu = np.ones(omega.shape, dtype=np.complex128)
     uxx = np.ones_like(uu)
     uex = np.ones_like(uu)
     wp = omega != 0
@@ -150,20 +150,20 @@ def make_moment_tensor(strike, dip, rake, M0, eta=0, xtr=0):
        evn=scmom*(       eta       )
        evt=scmom*( 1.-.5*eta+.5*xtr)
 
-    :returns: 3x3 array, moment tensor in spherical polar coordinates (GCMT convention)
+    :returns: 3x3 tensor, moment tensor in spherical polar coordinates (GCMT convention)
     """
-    strike_r = np.deg2rad(strike)
-    dip_r = np.deg2rad(dip)
-    rake_r = np.deg2rad(rake)
-    sv = np.array([0.0, -np.cos(strike_r), np.sin(strike_r)])
-    d = np.array(
+    strike_r = np.deg2rad(np.tensor(strike))
+    dip_r = np.deg2rad(np.tensor(dip))
+    rake_r = np.deg2rad(np.tensor(rake))
+    sv = np.tensor([0.0, -np.cos(strike_r), np.sin(strike_r)])
+    d = np.tensor(
         [
             -np.sin(dip_r),
             np.cos(dip_r) * np.sin(strike_r),
             np.cos(dip_r) * np.cos(strike_r),
         ]
     )
-    n = np.array(
+    n = np.tensor(
         [
             np.cos(dip_r),
             np.sin(dip_r) * np.sin(strike_r),
@@ -171,16 +171,16 @@ def make_moment_tensor(strike, dip, rake, M0, eta=0, xtr=0):
         ]
     )
     e = sv * np.cos(rake_r) - d * np.sin(rake_r)
-    b = np.cross(e, n)
-    t = (e + n) / np.sqrt(2)
-    p = (e - n) / np.sqrt(2)
-    ev = M0 * np.array([-1 - 0.5 * eta + 0.5 * xtr, eta, 1 - 0.5 * eta + 0.5 * xtr])
+    b = np.cross(e, n,dim=-1)
+    t = (e + n) / np.sqrt(np.tensor(2))
+    p = (e - n) / np.sqrt(np.tensor(2))
+    ev = M0 * np.tensor([-1 - 0.5 * eta + 0.5 * xtr, eta, 1 - 0.5 * eta + 0.5 * xtr])
     fmom = np.zeros(6)
     fmom[:3] = ev[0] * p**2 + ev[1] * b**2 + ev[2] * t**2
     fmom[3] = ev[0] * p[0] * p[1] + ev[1] * b[0] * b[1] + ev[2] * t[0] * t[1]
     fmom[4] = ev[0] * p[0] * p[2] + ev[1] * b[0] * b[2] + ev[2] * t[0] * t[2]
     fmom[5] = ev[0] * p[1] * p[2] + ev[1] * b[1] * b[2] + ev[2] * t[1] * t[2]
-    M = np.array(
+    M = np.tensor(
         [
             [fmom[0], fmom[3], fmom[4]],
             [fmom[3], fmom[1], fmom[5]],
@@ -201,7 +201,7 @@ def rtf2xyz(M):
     # # M2[1,:]*=-1
     # # M2[:,1]*=-1
 
-    M2 = np.array(
+    M2 = np.tensor(
         [
             [M[2, 2], -M[2, 1], M[2, 0]],
             [-M[1, 2], M[1, 1], -M[1, 0]],

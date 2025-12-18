@@ -1,4 +1,4 @@
-import numpy as np
+import torch as np
 from pyprop8 import _scaledmatrix as scm
 
 ##################################
@@ -16,9 +16,9 @@ def freeSurfaceBoundary(nk, sh=False):
     """
     # (2011) Eq. 85 (with P-SV system in minor vector form)
     if sh:
-        m = np.zeros([nk, 2, 1], dtype="complex128")
+        m = np.zeros([nk, 2, 1], dtype=np.complex128)
     else:
-        m = np.zeros([nk, 6, 1], dtype="complex128")
+        m = np.zeros([nk, 6, 1], dtype=np.complex128)
     m[:, 0, 0] = 1
     return scm.ScaledMatrixStack(m)
 
@@ -29,7 +29,7 @@ def oceanFloorBoundary(depth, omega, k, sigma, rho, sh=False):
 
     :param float depth: Water depth/ocean layer thickness
     :param complex omega: Evaluation frequency
-    :param numpy.ndarray k: k-space wavenumber
+    :param numpy.ndtensor k: k-space wavenumber
     :param float sigma: P-wave modulus
     :param float rho: Density
     :param bool sh: True -> SH system, False -> P-SV system
@@ -40,12 +40,12 @@ def oceanFloorBoundary(depth, omega, k, sigma, rho, sh=False):
     # (2011) Eqs. 86 & 88 (P-SV in minor vector form)
     nk = k.shape[0]
     if sh:
-        m = np.zeros([nk, 2, 1], dtype="complex128")
+        m = np.zeros([nk, 2, 1], dtype=np.complex128)
         m[:, 0, 0] = 1
     else:
-        zsig = np.lib.scimath.sqrt(k**2 - rho * omega**2 / sigma)
+        zsig = np.sqrt(k**2 - rho * omega**2 / sigma)
         t = np.exp(-2 * depth * zsig)
-        m = np.zeros([nk, 6, 1], dtype="complex128")
+        m = np.zeros([nk, 6, 1], dtype=np.complex128)
         m[:, 0, 0] = 1 + t
         if omega != 0:
             m[:, 3, 0] = -rho * omega**2 * (1 - t) / zsig
@@ -58,7 +58,7 @@ def oceanFloorBoundary_deriv(depth, omega, k, sigma, rho, sh=False):
 
     :param float depth: Water depth/ocean layer thickness
     :param complex omega: Evaluation frequency
-    :param numpy.ndarray k: k-space wavenumber
+    :param numpy.ndtensor k: k-space wavenumber
     :param float sigma: P-wave modulus
     :param float rho: Density
     :param bool sh: True -> SH system, False -> P-SV system
@@ -69,11 +69,11 @@ def oceanFloorBoundary_deriv(depth, omega, k, sigma, rho, sh=False):
     # Derivative of (2011) Eqs. 86 & 88 wrt ocean depth (i.e. layer thickness)
     nk = k.shape[0]
     if sh:
-        m = np.zeros([nk, 2, 1], dtype="complex128")
+        m = np.zeros([nk, 2, 1], dtype=np.complex128)
     else:
-        zsig = np.lib.scimath.sqrt(k**2 - rho * omega**2 / sigma)
+        zsig = np.sqrt(k**2 - rho * omega**2 / sigma)
         t = np.exp(-2 * depth * zsig)
-        m = np.zeros([nk, 6, 1], dtype="complex128")
+        m = np.zeros([nk, 6, 1], dtype=np.complex128)
         m[:, 0, 0] = -2 * t * zsig
         if omega != 0:
             m[:, 3, 0] = -2 * rho * t * omega**2
@@ -85,7 +85,7 @@ def underlyingHalfspaceBoundary(omega, k, sigma, mu, rho, sh=False):
     Implement the boundary condition for the underlying halfspace
 
     :param complex omega: Evaluation frequency
-    :param numpy.ndarray k: k-space wavenumber 
+    :param numpy.ndtensor k: k-space wavenumber 
     :param float sigma: P-wave modulus
     :param float mu: S-wave modulus
     :param float rho: Density
@@ -97,20 +97,20 @@ def underlyingHalfspaceBoundary(omega, k, sigma, mu, rho, sh=False):
     # (2011) Eqs. 89 & 90
     nk = k.shape[0]
 
-    zmu = np.lib.scimath.sqrt(k**2 - rho * omega**2 / mu)
+    zmu = np.sqrt(k**2 - rho * omega**2 / mu)
     if sh:
-        m = np.zeros([nk, 2, 1], dtype="complex128")
+        m = np.zeros([nk, 2, 1], dtype=np.complex128)
         m[:, 0, 0] = 1
         m[:, 1, 0] = mu * zmu
     else:
-        zsig = np.lib.scimath.sqrt(k**2 - rho * omega**2 / sigma)
+        zsig = np.sqrt(k**2 - rho * omega**2 / sigma)
         # xi <-- (2011) Eq. 91
         xi = np.zeros_like(zsig)
         xi[k == 0] = np.sqrt(mu / sigma)
         xi[k > 0] = (rho * omega**2 / sigma - k[k > 0] ** 2 * (1 + mu / sigma)) / (
             k[k > 0] ** 2 + zsig[k > 0] * zmu[k > 0]
         )
-        m = np.zeros([nk, 6, 1], dtype="complex128")
+        m = np.zeros([nk, 6, 1], dtype=np.complex128)
         m[:, 0, 0] = xi / mu
         m[:, 1, 0] = 2 * k * (xi + 0.5)
         m[:, 2, 0] = -zsig
@@ -124,9 +124,9 @@ def sourceVector(MT, F, k, sigma, mu):
     """
     Implement the source discontinity vector
 
-    :param numpy.ndarray MT: array, shape(3,3) containing moment tensor in Cartesian system
-    :param numpy.ndarray F: array, shape(3,) containing force vector in Cartesian system
-    :param numpy.ndarray k: k-space wavenumber 
+    :param numpy.ndtensor MT: tensor, shape(3,3) containing moment tensor in Cartesian system
+    :param numpy.ndtensor F: tensor, shape(3,) containing force vector in Cartesian system
+    :param numpy.ndtensor k: k-space wavenumber 
     :param float sigma: P-wave modulus at source depth
     :param float mu: S-wave modulus at source depth
 
@@ -138,8 +138,8 @@ def sourceVector(MT, F, k, sigma, mu):
     """
     # (2011) Eqs. 21 & 22.
     nk = k.shape[0]
-    s = np.zeros([nk, 4, 5], dtype="complex128")  # P-SV system, eq.21
-    s2 = np.zeros([nk, 2, 5], dtype="complex128")  # SH system, eq. 22
+    s = np.zeros([nk, 4, 5], dtype=np.complex128)  # P-SV system, eq.21
+    s2 = np.zeros([nk, 2, 5], dtype=np.complex128)  # SH system, eq. 22
     s[:, 0, 2] = MT[2, 2] / sigma
     s[:, 2, 2] = -F[2]
     s[:, 3, 2] = (
@@ -167,9 +167,9 @@ def sourceVector_ddep(MT, F, omega, k, sigma, mu, rho):
     """
     Implement the derivative of the source discontinity vector wrt source depth
 
-    :param numpy.ndarray MT: array, shape(3,3) containing moment tensor in Cartesian system
-    :param numpy.ndarray F: array, shape(3,) containing force vector in Cartesian system
-    :param numpy.ndarray k: k-space wavenumber
+    :param numpy.ndtensor MT: tensor, shape(3,3) containing moment tensor in Cartesian system
+    :param numpy.ndtensor F: tensor, shape(3,) containing force vector in Cartesian system
+    :param numpy.ndtensor k: k-space wavenumber
     :param float sigma: P-wave modulus at source depth
     :param float mu: S-wave modulus at source depth
 
@@ -184,8 +184,8 @@ def sourceVector_ddep(MT, F, omega, k, sigma, mu, rho):
     lam = sigma - 2 * mu
     gamma = mu * (3 * lam + 2 * mu) / (lam + 2 * mu)
     nk = k.shape[0]
-    s = np.zeros([nk, 4, 5], dtype="complex128")  # P-SV system, eq. A37
-    s2 = np.zeros([nk, 2, 5], dtype="complex128")  # SH system, eq. A38
+    s = np.zeros([nk, 4, 5], dtype=np.complex128)  # P-SV system, eq. A37
+    s2 = np.zeros([nk, 2, 5], dtype=np.complex128)  # SH system, eq. A38
     s[:, 0, 2] = F[2] / sigma
     s[:, 1, 2] = (
         -k
@@ -259,9 +259,9 @@ def propagate_zerofreq(k, dz, sigma, mu, rho, m2=None, m4=None, m6=None, inplace
     # Propagator matrices evaluated at w=0
     """Perform propagation through a layer of thickness dz and physical
     properties (sigma, mu, rho) for a stack of minor vectors corresponding to
-    spatial wavenumbers given in array k. Special case for zero (temporal) frequency.
+    spatial wavenumbers given in tensor k. Special case for zero (temporal) frequency.
 
-    :param numpy.ndarray k: Spatial wavenumber
+    :param numpy.ndtensor k: Spatial wavenumber
     :param float dz: Layer thickness
     :param float sigma: P-wave modulus in layer
     :param float mu: S-wave modulus in layer
@@ -272,11 +272,11 @@ def propagate_zerofreq(k, dz, sigma, mu, rho, m2=None, m4=None, m6=None, inplace
     :param bool inplace: Overwrite input system with result?
     """
     nk = k.shape[0]
-    c, s, scale = exphyp(dz * k)
+    c, s, scale = exphyp(dz * k.to(np.complex128))
     # Terms that don't change under h->-h
     if m2 is not None:
         # (2011) Eq. 84
-        M = np.zeros((nk, 2, 2), dtype="complex128")
+        M = np.zeros((nk, 2, 2), dtype=np.complex128)
         M[:, 0, 0] = c
         M[:, 0, 1] = s / (mu * k)
         M[:, 1, 0] = mu * k * s
@@ -286,13 +286,13 @@ def propagate_zerofreq(k, dz, sigma, mu, rho, m2=None, m4=None, m6=None, inplace
         else:
             out = None
         # And do the propagation
-        m2r = scm.ScaledMatrixStack(M, scale.copy()).matmul(m2, out=out)
+        m2r = scm.ScaledMatrixStack(M, scale.clone()).matmul(m2, out=out)
         del M
     else:
         m2r = None
     if m4 is not None:
         # exp( h A' ) (eq. 62 at zero freq, see `notes/otoole_woodhouse_2011.nb`)
-        exphap = np.zeros([nk, 4, 4], dtype="complex128")
+        exphap = np.zeros([nk, 4, 4], dtype=np.complex128)
         exphap[:, 0, 0] = c
         exphap[:, 0, 1] = dz * s * rho * (sigma - mu) / (2 * sigma * mu)
         exphap[:, 0, 2] = (
@@ -309,10 +309,10 @@ def propagate_zerofreq(k, dz, sigma, mu, rho, m2=None, m4=None, m6=None, inplace
         )
         exphap[:, 3, 2] = dz * s * rho * (sigma - mu) / (2 * sigma * mu)
         exphap[:, 3, 3] = c
-        M = scm.ScaledMatrixStack(exphap, scale.copy())
+        M = scm.ScaledMatrixStack(exphap, scale.clone())
         del exphap
         # (2011) Eq. 55
-        Z = np.zeros([nk, 4, 4], dtype="complex128")
+        Z = np.zeros([nk, 4, 4], dtype=np.complex128)
         rtrho = np.sqrt(rho)
         Z[:, 0, 0] = 1 / rtrho
         Z[:, 1, 3] = -1 / rtrho
@@ -321,7 +321,7 @@ def propagate_zerofreq(k, dz, sigma, mu, rho, m2=None, m4=None, m6=None, inplace
         Z[:, 3, 0] = 2 * k * mu / rtrho
         Z[:, 3, 1] = rtrho
         # Z^{-1}
-        iZ = np.zeros([nk, 4, 4], dtype="complex128")
+        iZ = np.zeros([nk, 4, 4], dtype=np.complex128)
         iZ[:, 0, 0] = rtrho
         iZ[:, 1, 0] = -2 * k * mu / rtrho
         iZ[:, 1, 3] = 1 / rtrho
@@ -345,7 +345,7 @@ def propagate_zerofreq(k, dz, sigma, mu, rho, m2=None, m4=None, m6=None, inplace
         # one containing cosh/sinh terms and the other without (because they 
         # need to be rescaled differently).
         # Rescaling of some components then rolled into definition of Z/inv(Z)
-        exphap = np.zeros([nk, 6, 6], dtype="complex128")
+        exphap = np.zeros([nk, 6, 6], dtype=np.complex128)
         exphap[:, 0, 0] = c**2
         exphap[:, 0, 1] = -c * s
         exphap[:, 0, 3] = -rho * c * s * (mu + sigma)
@@ -376,7 +376,7 @@ def propagate_zerofreq(k, dz, sigma, mu, rho, m2=None, m4=None, m6=None, inplace
         exphap[:, 5, 4] = -c * s
         exphap[:, 5, 5] = c**2
 
-        exphap_noscale = np.zeros([nk, 6, 6], dtype="complex128")
+        exphap_noscale = np.zeros([nk, 6, 6], dtype=np.complex128)
         exphap_noscale[:, 0, 3] = -rho * dz * k * (mu - sigma)
         exphap_noscale[:, 2, 0] = rho * dz * k * (mu - sigma)
         exphap_noscale[:, 2, 2] = 2 * k * mu * sigma
@@ -384,13 +384,13 @@ def propagate_zerofreq(k, dz, sigma, mu, rho, m2=None, m4=None, m6=None, inplace
         exphap_noscale[:, 2, 5] = rho * dz * k * (mu - sigma)
         exphap_noscale[:, 3, 3] = 2 * k * mu * sigma
         exphap_noscale[:, 5, 3] = -rho * dz * k * (mu - sigma)
-        M = scm.ScaledMatrixStack(exphap, 2 * scale.copy()) + scm.ScaledMatrixStack(
+        M = scm.ScaledMatrixStack(exphap, 2 * scale.clone()) + scm.ScaledMatrixStack(
             exphap_noscale
         )
         # These are not Z/inv(Z) as defined in (2011) paper -- 
         # we have pulled some scale factors out of exp(h A') and into
         # these matrices.
-        Z = np.zeros([nk, 6, 6], dtype="complex128")
+        Z = np.zeros([nk, 6, 6], dtype=np.complex128)
         Z[:, 0, 2] = -1 / (2 * k * mu * rho * sigma)
         Z[:, 1, 1] = 1
         Z[:, 1, 2] = -1 / (rho * sigma)
@@ -403,7 +403,7 @@ def propagate_zerofreq(k, dz, sigma, mu, rho, m2=None, m4=None, m6=None, inplace
         Z[:, 5, 3] = -rho
         Z[:, 5, 4] = 2 * k * mu
         # Minors of Z^{-1}
-        iZ = np.zeros([nk, 6, 6], dtype="complex128")
+        iZ = np.zeros([nk, 6, 6], dtype=np.complex128)
         iZ[:, 0, 2] = 1
         iZ[:, 1, 0] = -2 * k * mu
         iZ[:, 1, 1] = 1
@@ -434,9 +434,9 @@ def propagate_zerofreq_deriv(
 ):
     """Compute derivative of propagation through a layer of thickness dz and physical
     properties (sigma, mu, rho) wrt layer thickeness for a stack of minor vectors corresponding to
-    spatial wavenumbers given in array k.  Special case for zero (temporal) frequency.
+    spatial wavenumbers given in tensor k.  Special case for zero (temporal) frequency.
 
-    :param numpy.ndarray k: Spatial wavenumber
+    :param numpy.ndtensor k: Spatial wavenumber
     :param float dz: Layer thickness
     :param float sigma: P-wave modulus in layer
     :param float mu: S-wave modulus in layer
@@ -451,7 +451,7 @@ def propagate_zerofreq_deriv(
     c, s, scale = exphyp(dz * k)
     # Terms that don't change under h->-h
     if m2 is not None:
-        M = np.zeros((nk, 2, 2), dtype="complex128")
+        M = np.zeros((nk, 2, 2), dtype=np.complex128)
         M[:, 0, 0] = k * s
         M[:, 0, 1] = c / mu
         M[:, 1, 0] = mu * k**2 * c
@@ -460,12 +460,12 @@ def propagate_zerofreq_deriv(
             out = m2
         else:
             out = None
-        m2r = scm.ScaledMatrixStack(M, scale.copy()).matmul(m2, out=out)
+        m2r = scm.ScaledMatrixStack(M, scale.clone()).matmul(m2, out=out)
         del M
     else:
         m2r = None
     if m4 is not None:
-        exphap = np.zeros([nk, 4, 4], dtype="complex128")
+        exphap = np.zeros([nk, 4, 4], dtype=np.complex128)
         exphap[:, 0, 0] = k * s
         exphap[:, 0, 1] = -((c * dz * k + s) * rho * (mu - sigma)) / (2 * mu * sigma)
         exphap[:, 0, 2] = (
@@ -485,9 +485,9 @@ def propagate_zerofreq_deriv(
         )
         exphap[:, 3, 2] = -(c * dz * k + s) * rho * (mu - sigma) / (2 * mu * sigma)
         exphap[:, 3, 3] = k * s
-        M = scm.ScaledMatrixStack(exphap, scale.copy())
+        M = scm.ScaledMatrixStack(exphap, scale.clone())
         del exphap
-        Z = np.zeros([nk, 4, 4], dtype="complex128")
+        Z = np.zeros([nk, 4, 4], dtype=np.complex128)
         rtrho = np.sqrt(rho)
         Z[:, 0, 0] = 1 / rtrho
         Z[:, 1, 3] = -1 / rtrho
@@ -495,7 +495,7 @@ def propagate_zerofreq_deriv(
         Z[:, 2, 3] = -2 * k * mu / rtrho
         Z[:, 3, 0] = 2 * k * mu / rtrho
         Z[:, 3, 1] = rtrho
-        iZ = np.zeros([nk, 4, 4], dtype="complex128")
+        iZ = np.zeros([nk, 4, 4], dtype=np.complex128)
         iZ[:, 0, 0] = rtrho
         iZ[:, 1, 0] = -2 * k * mu / rtrho
         iZ[:, 1, 3] = 1 / rtrho
@@ -513,7 +513,7 @@ def propagate_zerofreq_deriv(
     else:
         m4r = None
     if m6 is not None:
-        exphap = np.zeros([nk, 6, 6], dtype="complex128")
+        exphap = np.zeros([nk, 6, 6], dtype=np.complex128)
         fac = rho * (mu + sigma) / (mu * sigma)
         exphap[:, 0, 0] = 2 * c * k * s
         exphap[:, 0, 1] = -2 * k * s**2
@@ -545,7 +545,7 @@ def propagate_zerofreq_deriv(
         exphap[:, 5, 4] = -2 * k * s**2
         exphap[:, 5, 5] = 2 * c * k * s
 
-        exphap_noscale = np.zeros([nk, 6, 6], dtype="complex128")
+        exphap_noscale = np.zeros([nk, 6, 6], dtype=np.complex128)
         exphap_noscale[:, 0, 1] = -k
         exphap_noscale[:, 0, 3] = -rho / sigma
         exphap_noscale[:, 0, 4] = k
@@ -559,11 +559,11 @@ def propagate_zerofreq_deriv(
         exphap_noscale[:, 5, 1] = k
         exphap_noscale[:, 5, 3] = rho / mu
         exphap_noscale[:, 5, 4] = -k
-        M = scm.ScaledMatrixStack(exphap, 2 * scale.copy()) + scm.ScaledMatrixStack(
+        M = scm.ScaledMatrixStack(exphap, 2 * scale.clone()) + scm.ScaledMatrixStack(
             exphap_noscale
         )
 
-        Z = np.zeros([nk, 6, 6], dtype="complex128")
+        Z = np.zeros([nk, 6, 6], dtype=np.complex128)
         Z[:, 0, 2] = -1 / rho
         Z[:, 1, 1] = 1
         Z[:, 1, 2] = -2 * k * mu / rho
@@ -576,7 +576,7 @@ def propagate_zerofreq_deriv(
         Z[:, 5, 3] = -rho
         Z[:, 5, 4] = 2 * k * mu
 
-        iZ = np.zeros([nk, 6, 6], dtype="complex128")
+        iZ = np.zeros([nk, 6, 6], dtype=np.complex128)
         iZ[:, 0, 2] = 1
         iZ[:, 1, 0] = -2 * k * mu
         iZ[:, 1, 1] = 1
@@ -604,10 +604,10 @@ def propagate_zerofreq_deriv(
 def propagate(omega, k, dz, sigma, mu, rho, m2=None, m4=None, m6=None, inplace=True):
     """Perform propagation through a layer of thickness dz and physical
     properties (sigma, mu, rho) for a stack of minor vectors corresponding to
-    spatial wavenumbers given in array k. 
+    spatial wavenumbers given in tensor k. 
 
     :param float omega: Frequency
-    :param numpy.ndarray k: Spatial wavenumber
+    :param numpy.ndtensor k: Spatial wavenumber
     :param float dz: Layer thickness
     :param float sigma: P-wave modulus in layer
     :param float mu: S-wave modulus in layer
@@ -628,13 +628,13 @@ def propagate(omega, k, dz, sigma, mu, rho, m2=None, m4=None, m6=None, inplace=T
         return propagate_zerofreq(k, dz, sigma, mu, rho, m2, m4, m6, inplace)
     nk = k.shape[0]
     if m4 is not None or m6 is not None:
-        zsig = np.lib.scimath.sqrt(k**2 - rho * omega**2 / sigma) #(2011) Eq.58
+        zsig = np.sqrt(k**2 - rho * omega**2 / sigma) #(2011) Eq.58
         csig, ssig, scalesig = exphyp(dz * zsig)
-    zmu = np.lib.scimath.sqrt(k**2 - rho * omega**2 / mu) #(2011) Eq.59
+    zmu = np.sqrt(k**2 - rho * omega**2 / mu) #(2011) Eq.59
     cmu, smu, scalemu = exphyp(dz * zmu)
     if m2 is not None:
         # exp(h A) with A as in (2011) eq. 15
-        M = np.zeros((nk, 2, 2), dtype="complex128")
+        M = np.zeros((nk, 2, 2), dtype=np.complex128)
         M[:, 0, 0] = cmu
         M[:, 0, 1] = smu / (mu * zmu)
         M[:, 1, 0] = mu * zmu * smu
@@ -643,13 +643,13 @@ def propagate(omega, k, dz, sigma, mu, rho, m2=None, m4=None, m6=None, inplace=T
             out = m2
         else:
             out = None
-        m2r = scm.ScaledMatrixStack(M, scalemu.copy()).matmul(m2, out=out)
+        m2r = scm.ScaledMatrixStack(M, scalemu.clone()).matmul(m2, out=out)
         del M
     else:
         m2r = None
     if m4 is not None:
         # Exp(h A'); split into terms involving zeta_p and terms involving zeta_s (see `notes/otoole_woodhouse_2011.nb`)
-        exphap_s = np.zeros([nk, 4, 4], dtype="complex128")
+        exphap_s = np.zeros([nk, 4, 4], dtype=np.complex128)
         exphap_s[:, 0, 0] = csig
         exphap_s[:, 0, 1] = csig * k / omega**2
         exphap_s[:, 0, 2] = -ssig * zsig / omega**2
@@ -659,10 +659,10 @@ def propagate(omega, k, dz, sigma, mu, rho, m2=None, m4=None, m6=None, inplace=T
         exphap_s[:, 3, 0] = -k * ssig / zsig
         exphap_s[:, 3, 1] = -(k**2) * ssig / (zsig * omega**2)
         exphap_s[:, 3, 2] = k * csig / omega**2
-        M = scm.ScaledMatrixStack(exphap_s, scalesig.copy())
+        M = scm.ScaledMatrixStack(exphap_s, scalesig.clone())
         del exphap_s  # Don't need explicit reference; reference in M still exists.
 
-        exphap_m = np.zeros([nk, 4, 4], dtype="complex128")
+        exphap_m = np.zeros([nk, 4, 4], dtype=np.complex128)
         exphap_m[:, 0, 1] = -k * cmu / omega**2
         exphap_m[:, 0, 2] = k**2 * smu / (zmu * omega**2)
         exphap_m[:, 0, 3] = -k * smu / zmu
@@ -673,12 +673,12 @@ def propagate(omega, k, dz, sigma, mu, rho, m2=None, m4=None, m6=None, inplace=T
         exphap_m[:, 3, 2] = -k * cmu / omega**2
         exphap_m[:, 3, 3] = cmu
 
-        M += scm.ScaledMatrixStack(exphap_m, scalemu.copy())
+        M += scm.ScaledMatrixStack(exphap_m, scalemu.clone())
         del exphap_m
 
         rtrho = np.sqrt(rho)
 
-        Z = np.zeros([nk, 4, 4], dtype="complex128")
+        Z = np.zeros([nk, 4, 4], dtype=np.complex128)
         Z[:, 0, 0] = 1 / rtrho
         Z[:, 1, 3] = -1 / rtrho
         Z[:, 2, 2] = rtrho
@@ -686,7 +686,7 @@ def propagate(omega, k, dz, sigma, mu, rho, m2=None, m4=None, m6=None, inplace=T
         Z[:, 3, 0] = 2 * mu * k / rtrho
         Z[:, 3, 1] = rtrho
 
-        iZ = np.zeros([nk, 4, 4], dtype="complex128")
+        iZ = np.zeros([nk, 4, 4], dtype=np.complex128)
         iZ[:, 0, 0] = rtrho
         iZ[:, 1, 0] = -2 * mu * k / rtrho
         iZ[:, 1, 3] = 1 / rtrho
@@ -711,7 +711,7 @@ def propagate(omega, k, dz, sigma, mu, rho, m2=None, m4=None, m6=None, inplace=T
         X2 = csig * smu
 
         # Split matrix into term containing cosh/sinh products (which need scaling by exp(scale)) and the rest.
-        M1 = np.zeros([nk, 6, 6], dtype="complex128")
+        M1 = np.zeros([nk, 6, 6], dtype=np.complex128)
 
         M1[:, 0, 0] = Pc
         M1[:, 0, 1] = -X2
@@ -757,7 +757,7 @@ def propagate(omega, k, dz, sigma, mu, rho, m2=None, m4=None, m6=None, inplace=T
         M = scm.ScaledMatrixStack(M1, scalemu + scalesig)
         del M1
 
-        M2 = np.zeros([nk, 6, 6], dtype="complex128")
+        M2 = np.zeros([nk, 6, 6], dtype=np.complex128)
         M2[:, 1, 1] = xiprod
         M2[:, 1, 3] = xiprod
         M2[:, 2, 1] = xiprod
@@ -768,7 +768,7 @@ def propagate(omega, k, dz, sigma, mu, rho, m2=None, m4=None, m6=None, inplace=T
         M += scm.ScaledMatrixStack(M2)
         del M2
 
-        Z = np.zeros([nk, 6, 6], dtype="complex128")
+        Z = np.zeros([nk, 6, 6], dtype=np.complex128)
         Z[:, 0, 2] = -(k**2) / (rho * omega**2)
         Z[:, 1, 1] = k
         Z[:, 1, 2] = -2 * k**3 * mu / (rho * omega**2)
@@ -781,7 +781,7 @@ def propagate(omega, k, dz, sigma, mu, rho, m2=None, m4=None, m6=None, inplace=T
         Z[:, 5, 3] = -rho * omega**2
         Z[:, 5, 4] = 2 * k**2 * mu
 
-        iZ = np.zeros([nk, 6, 6], dtype="complex128")
+        iZ = np.zeros([nk, 6, 6], dtype=np.complex128)
         iZ[:, 0, 2] = 1 / zsig
         iZ[:, 1, 0] = -2 * k**2 * mu / (zsig * zmu)
         iZ[:, 1, 1] = k / (zsig * zmu)
@@ -810,10 +810,10 @@ def propagate_deriv(
 ):
     """Calculate derivative of propagation through a layer of thickness dz and physical
     properties (sigma, mu, rho) wrt layer thickness for a stack of minor vectors corresponding to
-    spatial wavenumbers given in array k. 
+    spatial wavenumbers given in tensor k. 
 
     :param float omega: Frequency
-    :param numpy.ndarray k: Spatial wavenumber
+    :param numpy.ndtensor k: Spatial wavenumber
     :param float dz: Layer thickness
     :param float sigma: P-wave modulus in layer
     :param float mu: S-wave modulus in layer
@@ -829,12 +829,12 @@ def propagate_deriv(
         return propagate_zerofreq_deriv(k, dz, sigma, mu, rho, m2, m4, m6, inplace)
     nk = k.shape[0]
     if m4 is not None or m6 is not None:
-        zsig = np.lib.scimath.sqrt(k**2 - rho * omega**2 / sigma)
+        zsig = np.sqrt(k**2 - rho * omega**2 / sigma)
         csig, ssig, scalesig = exphyp(dz * zsig)
-    zmu = np.lib.scimath.sqrt(k**2 - rho * omega**2 / mu)
+    zmu = np.sqrt(k**2 - rho * omega**2 / mu)
     cmu, smu, scalemu = exphyp(dz * zmu)
     if m2 is not None:
-        M = np.zeros((nk, 2, 2), dtype="complex128")
+        M = np.zeros((nk, 2, 2), dtype=np.complex128)
         M[:, 0, 0] = zmu * smu
         M[:, 0, 1] = cmu / mu
         M[:, 1, 0] = mu * cmu * zmu**2
@@ -843,12 +843,12 @@ def propagate_deriv(
             out = m2
         else:
             out = None
-        m2r = scm.ScaledMatrixStack(M, scalemu.copy()).matmul(m2, out=out)
+        m2r = scm.ScaledMatrixStack(M, scalemu.clone()).matmul(m2, out=out)
         del M
     else:
         m2r = None
     if m4 is not None:
-        exphap_s = np.zeros([nk, 4, 4], dtype="complex128")
+        exphap_s = np.zeros([nk, 4, 4], dtype=np.complex128)
         exphap_s[:, 0, 0] = ssig * zsig
         exphap_s[:, 0, 1] = k * ssig * zsig / omega**2
         exphap_s[:, 0, 2] = -csig * (zsig / omega) ** 2
@@ -858,10 +858,10 @@ def propagate_deriv(
         exphap_s[:, 3, 0] = -k * csig
         exphap_s[:, 3, 1] = -((k / omega) ** 2) * csig
         exphap_s[:, 3, 2] = k * ssig * zsig / omega**2
-        M = scm.ScaledMatrixStack(exphap_s, scalesig.copy())
+        M = scm.ScaledMatrixStack(exphap_s, scalesig.clone())
         del exphap_s
 
-        exphap_m = np.zeros([nk, 4, 4], dtype="complex128")
+        exphap_m = np.zeros([nk, 4, 4], dtype=np.complex128)
         exphap_m[:, 0, 1] = -k * smu * zmu / omega**2
         exphap_m[:, 0, 2] = (k / omega) ** 2 * cmu
         exphap_m[:, 0, 3] = -k * cmu
@@ -871,10 +871,10 @@ def propagate_deriv(
         exphap_m[:, 3, 1] = cmu * (zmu / omega) ** 2
         exphap_m[:, 3, 2] = -k * zmu * smu / omega**2
         exphap_m[:, 3, 3] = smu * zmu
-        M += scm.ScaledMatrixStack(exphap_m, scalemu.copy())
+        M += scm.ScaledMatrixStack(exphap_m, scalemu.clone())
         del exphap_m
         rtrho = np.sqrt(rho)
-        Z = np.zeros([nk, 4, 4], dtype="complex128")
+        Z = np.zeros([nk, 4, 4], dtype=np.complex128)
         Z[:, 0, 0] = 1 / rtrho
         Z[:, 1, 3] = -1 / rtrho
         Z[:, 2, 2] = rtrho
@@ -882,7 +882,7 @@ def propagate_deriv(
         Z[:, 3, 0] = 2 * mu * k / rtrho
         Z[:, 3, 1] = rtrho
 
-        iZ = np.zeros([nk, 4, 4], dtype="complex128")
+        iZ = np.zeros([nk, 4, 4], dtype=np.complex128)
         iZ[:, 0, 0] = rtrho
         iZ[:, 1, 0] = -2 * mu * k / rtrho
         iZ[:, 1, 3] = 1 / rtrho
@@ -904,7 +904,7 @@ def propagate_deriv(
         Ps = smu * ssig
         X1 = cmu * ssig
         X2 = csig * smu
-        M = np.zeros([nk, 6, 6], dtype="complex128")
+        M = np.zeros([nk, 6, 6], dtype=np.complex128)
         M[:, 0, 0] = X2 * zmu + X1 * zsig
         M[:, 0, 1] = -Pc - Ps * zsig / zmu
         M[:, 0, 2] = Pc + Ps * zsig / zmu
@@ -950,7 +950,7 @@ def propagate_deriv(
         M[:, 5, 4] = -Pc - Ps * zmu / zsig
         M[:, 5, 5] = X2 * zmu + X1 * zsig
         M = scm.ScaledMatrixStack(M, scalemu + scalesig)
-        Z = np.zeros([nk, 6, 6], dtype="complex128")
+        Z = np.zeros([nk, 6, 6], dtype=np.complex128)
         Z[:, 0, 2] = -1
         Z[:, 1, 1] = k
         Z[:, 1, 2] = -2 * k * mu
@@ -962,7 +962,7 @@ def propagate_deriv(
         Z[:, 5, 2] = 4 * k**2 * mu**2
         Z[:, 5, 3] = -rho * omega**2
         Z[:, 5, 4] = 2 * k**2 * mu
-        iZ = np.zeros([nk, 6, 6], dtype="complex128")
+        iZ = np.zeros([nk, 6, 6], dtype=np.complex128)
         iZ[:, 0, 2] = 1
         iZ[:, 1, 0] = -2 * mu * k**2
         iZ[:, 1, 1] = k
@@ -993,7 +993,7 @@ def makeN(s):
     # (2011) Eq. 52
     #
     m = s.M
-    N = np.zeros([s.nStack, 4, 4], dtype="complex128")
+    N = np.zeros([s.nStack, 4, 4], dtype=np.complex128)
     #
     # R = np.zeros([4,4,6])
     # R[0,0,1] = -1
@@ -1020,7 +1020,7 @@ def makeN(s):
     N[:, 3, 0] = m[:, 5, 0]
     N[:, 3, 2] = -m[:, 2, 0]
     N[:, 3, 3] = -m[:, 4, 0]
-    return scm.ScaledMatrixStack(N, s.scale.copy())
+    return scm.ScaledMatrixStack(N, s.scale.clone())
 
 
 def makeDelta(scm1, scm2, sh=False):
@@ -1030,7 +1030,7 @@ def makeDelta(scm1, scm2, sh=False):
     m2 = scm2.M
     if not scm1.nStack == scm2.nStack:
         raise ValueError("Dimension mismatch")
-    m = np.zeros([scm1.nStack, 1, 1], dtype="complex128")
+    m = np.zeros([scm1.nStack, 1, 1], dtype=np.complex128)
     if sh:
         m[:, 0, 0] = m1[:, 0, 0] * m2[:, 1, 0] - m1[:, 1, 0] * m2[:, 0, 0]
     else:
@@ -1158,10 +1158,10 @@ def compute_H_matrices(k, omega, dz, sigma, mu, rho, isrc, irec, do_derivatives=
         basal_bc_sh, _, basal_bc_psv = propagate(
             omega, k, dz[i], sigma[i], mu[i], rho[i], m2=basal_bc_sh, m6=basal_bc_psv
         )
-    basal_bc_sh_at_src = basal_bc_sh.copy()
+    basal_bc_sh_at_src = basal_bc_sh.clone()
     if do_derivatives:
-        basal_bc_sh_drv_at_src = [b.copy() for b in basal_bc_sh_drv]
-    # basal_bc_psv_at_src = basal_bc_psv.copy()
+        basal_bc_sh_drv_at_src = [b.clone() for b in basal_bc_sh_drv]
+    # basal_bc_psv_at_src = basal_bc_psv.clone()
     # Create N and continue to propagate everything up to receiver
     N = makeN(basal_bc_psv)
     if do_derivatives:
@@ -1213,7 +1213,7 @@ def compute_H_matrices(k, omega, dz, sigma, mu, rho, isrc, irec, do_derivatives=
             basal_bc_sh_drv_at_src += [None]
     # Now assemble H
     H_psv = (makeN(surface_bc_psv) @ N) / makeDelta(surface_bc_psv, basal_bc_psv)
-    H_sh = np.zeros([k.shape[0], 2, 2], dtype="complex128")
+    H_sh = np.zeros([k.shape[0], 2, 2], dtype=np.complex128)
     H_sh[:, 0, 0] = surface_bc_sh.M[:, 0, 0] * basal_bc_sh_at_src.M[:, 1, 0]
     H_sh[:, 0, 1] = -surface_bc_sh.M[:, 0, 0] * basal_bc_sh_at_src.M[:, 0, 0]
     H_sh[:, 1, 0] = surface_bc_sh.M[:, 1, 0] * basal_bc_sh_at_src.M[:, 1, 0]
@@ -1242,9 +1242,9 @@ def compute_H_matrices(k, omega, dz, sigma, mu, rho, isrc, irec, do_derivatives=
         for s, bsrc, b in zip(
             surface_bc_sh_drv, basal_bc_sh_drv_at_src, basal_bc_sh_drv
         ):
-            D1 = np.zeros([k.shape[0], 2, 2], dtype="complex128")
+            D1 = np.zeros([k.shape[0], 2, 2], dtype=np.complex128)
             ddelta = scm.ScaledMatrixStack(
-                np.zeros([k.shape[0], 1, 1], dtype="complex128")
+                np.zeros([k.shape[0], 1, 1], dtype=np.complex128)
             )
             if s is not None:
                 D1[:, 0, 0] = s.M[:, 0, 0] * basal_bc_sh_at_src.M[:, 1, 0]
@@ -1255,7 +1255,7 @@ def compute_H_matrices(k, omega, dz, sigma, mu, rho, isrc, irec, do_derivatives=
                 ddelta += makeDelta(s, basal_bc_sh, sh=True)
             else:
                 D1 = scm.ScaledMatrixStack(D1)
-            D2 = np.zeros([k.shape[0], 2, 2], dtype="complex128")
+            D2 = np.zeros([k.shape[0], 2, 2], dtype=np.complex128)
             if bsrc is not None:
                 D2[:, 0, 0] = surface_bc_sh.M[:, 0, 0] * bsrc.M[:, 1, 0]
                 D2[:, 0, 1] = -surface_bc_sh.M[:, 0, 0] * bsrc.M[:, 0, 0]

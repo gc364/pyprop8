@@ -1,6 +1,8 @@
+import sys
+sys.path.insert(1,'/Users/Oscar/OneDrive - Durham University/University/Year3/pyprop8/src')
 import pyprop8 as pp
 from pyprop8.utils import stf_trapezoidal, make_moment_tensor, rtf2xyz
-import numpy as np
+import torch as np
 
 
 def tests():
@@ -60,7 +62,7 @@ def tests():
     )
     print("    a. Perturbing source in x.")
 
-    source_x = source.copy()
+    source_x = source.clone()
     source_x.x += epsilon
 
     tt, seis_x = pp.compute_seismograms(
@@ -78,7 +80,7 @@ def tests():
 
     fd = (seis_x - seis0) / epsilon  # finite difference estimate
     max_x = (
-        abs(drv[:, derivs.i_x, :, :]).max(-1).reshape(stations.nstations, 3, 1)
+        abs(drv[:, derivs.i_x, :, :]).max(-1).values.reshape(stations.nstations, 3, 1)
     )  # Maximum absolute value of trace
     perc_err_x = 100 * (
         abs(drv[:, derivs.i_x, :, :] - fd) / max_x
@@ -89,7 +91,7 @@ def tests():
     )
 
     print("    b. Perturbing source in y.")
-    source_y = source.copy()
+    source_y = source.clone()
     source_y.y += epsilon
 
     tt, seis_y = pp.compute_seismograms(
@@ -107,7 +109,7 @@ def tests():
 
     fd = (seis_y - seis0) / epsilon  # finite difference estimate
     max_y = (
-        abs(drv[:, derivs.i_y, :, :]).max(-1).reshape(stations.nstations, 3, 1)
+        abs(drv[:, derivs.i_y, :, :]).max(-1).values.reshape(stations.nstations, 3, 1)
     )  # Maximum absolute value of trace
     perc_err_y = 100 * (
         abs(drv[:, derivs.i_y, :, :] - fd) / max_y
@@ -118,7 +120,7 @@ def tests():
     )
 
     print("    c. Perturbing source in z.")
-    source_z = source.copy()
+    source_z = source.clone()
     source_z.dep -= epsilon  # coordinate system is z-up so a positive epsilon in z is a *reduction* in source depth
 
     tt, seis_z = pp.compute_seismograms(
@@ -136,7 +138,7 @@ def tests():
 
     fd = (seis_z - seis0) / epsilon  # finite difference estimate
     max_z = (
-        abs(drv[:, derivs.i_z, :, :]).max(-1).reshape(stations.nstations, 3, 1)
+        abs(drv[:, derivs.i_z, :, :]).max(-1).values.reshape(stations.nstations, 3, 1)
     )  # Maximum absolute value of trace
     perc_err_z = 100 * (
         abs(drv[:, derivs.i_z, :, :] - fd) / max_z
@@ -164,7 +166,7 @@ def tests():
     )
 
     fd = (stat_x - stat0) / epsilon
-    max_x = abs(drv[:, derivs.i_x, :]).max(0).reshape(1, 3)
+    max_x = abs(drv[:, derivs.i_x, :]).max(0).values.reshape(1, 3)
     perc_err_x = 100 * abs(drv[:, derivs.i_x, :] - fd) / max_x
     print(
         "       Worst-case difference between 'true' and finite-difference derivatives: %.3f%%"
@@ -179,7 +181,7 @@ def tests():
     )
     fd = (stat_y - stat0) / epsilon
 
-    max_y = abs(drv[:, derivs.i_y, :]).max(0).reshape(1, 3)
+    max_y = abs(drv[:, derivs.i_y, :]).max(0).values.reshape(1, 3)
     perc_err_y = 100 * abs(drv[:, derivs.i_y, :] - fd) / max_y
     print(
         "       Worst-case difference between 'true' and finite-difference derivatives: %.3f%%"
@@ -193,12 +195,13 @@ def tests():
         stations,
     )
     fd = (stat_z - stat0) / epsilon
-    max_z = abs(drv[:, derivs.i_z, :]).max(0).reshape(1, 3)
+    max_z = abs(drv[:, derivs.i_z, :]).max(0).values.reshape(1, 3)
     perc_err_z = 100 * abs(drv[:, derivs.i_z, :] - fd) / max_z
     print(
         "       Worst-case difference between 'true' and finite-difference derivatives: %.3f%%"
         % (perc_err_z.max())
     )
+    
 
 
 if __name__ == "__main__":

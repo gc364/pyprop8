@@ -1,4 +1,4 @@
-import numpy as np
+import torch as np
 
 """
 This module implements operations on exponentially-scaled matrices. This allows
@@ -32,15 +32,15 @@ class ScaledMatrixStack:
         nStack=None,
         N=None,
         M=None,
-        copy=False,
-        dtypeData="float64",
-        dtypeScale="float64",
+        clone=False,
+        dtypeData=np.float64,
+        dtypeScale=np.float64,
     ):
         """
         Initialise a stack (collection) of exponentially scaled matrices: each matrix A
         is expressed as (s, D) where A=exp(s).D. Usage is either:
 
-        scm = ScaledMatrixStack(data, scale, copy=False)
+        scm = ScaledMatrixStack(data, scale, clone=False)
 
         to populate the stack using pre-existing data and scale, or
 
@@ -49,13 +49,13 @@ class ScaledMatrixStack:
         to create an empty (zeros) stack of a given dimension and data type.
 
         Inputs:
-        data - array, shape (nStack, N, M): a set of nStack (N x M) matrices, {D1, D2, ...}
-        scale - array, shape (nStack,): the exponential scale factor for each of the
+        data - tensor, shape (nStack, N, M): a set of nStack (N x M) matrices, {D1, D2, ...}
+        scale - tensor, shape (nStack,): the exponential scale factor for each of the
                 nStack matrices, {s1, s2, ...}. (Use scale = np.zeros(...) if `data`
                 is currently unscaled.
         nStack - integer. The number of matrices in the stack.
         N, M  - integers. The dimensions of individual matrices.
-        copy - True/False. If True, call .copy() on both `data` and `scale`; if False,
+        clone - True/False. If True, call .clone() on both `data` and `scale`; if False,
                 use the versions as passed in.
         dtypeData - any valid `numpy.dtype` specification. The data type used for `D`.
         dtypeScale - any valid `numpy.dtype` specification. The data type used for `s`.
@@ -86,8 +86,8 @@ class ScaledMatrixStack:
                 raise TypeError(
                     "ScaledMatrixStack 'data' argument appears to have wrong shape"
                 )
-            if copy:
-                self.M = data.copy()
+            if clone:
+                self.M = data.clone()
                 if scale is None:
                     self.scale = np.zeros(self.nStack, dtype=dtypeScale)
                 else:
@@ -96,7 +96,7 @@ class ScaledMatrixStack:
                             raise ValueError(
                                 "ScaledMatrixStack 'scale' argument does not have expected shape"
                             )
-                        self.scale = scale.copy()
+                        self.scale = scale.clone()
                     except AttributeError:  # Assume it's a scalar
                         self.scale = np.full((self.nStack,), scale)
             else:
@@ -113,19 +113,19 @@ class ScaledMatrixStack:
                     self.scale = np.full((self.nStack,), scale)
             # self.rescale()
 
-    def copy(self, dest=None):
-        """Create a copy of a ScaledMatrixStack.
+    def clone(self, dest=None):
+        """Create a clone of a ScaledMatrixStack.
         ```
         scm = ScaledMatrixStack(...)
-        new = scm.copy()
+        new = scm.clone()
         ```
         """
 
         if dest is None:
-            return ScaledMatrixStack(self.M, self.scale, copy=True)
+            return ScaledMatrixStack(self.M, self.scale, clone=True)
         else:
-            np.copyto(dest.M, self.M)
-            np.copyto(dest.scale, self.scale)
+            np.cloneto(dest.M, self.M)
+            np.cloneto(dest.scale, self.scale)
             return dest
 
     def rescale(self):
@@ -183,7 +183,7 @@ class ScaledMatrixStack:
 
     @property
     def value(self):
-        """Convert the stack into a single numpy array."""
+        """Convert the stack into a single numpy tensor."""
         return self.M * np.exp(self.scale).reshape(-1, 1, 1)
 
     def matmul(self, other, out=None):
@@ -326,12 +326,12 @@ class ScaledMatrixStack:
         Multiply stack by a scalar.
         """
         if out is None:
-            return ScaledMatrixStack(self.M.copy(), self.scale + np.log(other))
+            return ScaledMatrixStack(self.M.clone(), self.scale + np.log(other))
         elif out is self:
             self.scale += np.log(other)
             return self
         else:
-            np.copyto(out.M, self.M)
+            np.cloneto(out.M, self.M)
             np.add(self.scale, np.log(other), out.scale)
             return out
 
