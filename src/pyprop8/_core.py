@@ -1599,7 +1599,7 @@ def compute_spectra(
             # xx,yy = stations.as_xy()
             if derivatives.x:
                 if type(stations) is RegularlyDistributedReceivers:
-                    drdx = np.tile(-np.cos(stations.pp), stations.nr).reshape(
+                    drdx = np.tile(-np.cos(stations.pp), [stations.nr]).reshape(
                         stations.nr, stations.nphi
                     )  # Result will be tensor (nr x nphi)
                     dpdx = np.outer(1 / stations.rr, np.sin(stations.pp))
@@ -1613,7 +1613,7 @@ def compute_spectra(
                 ) + np.einsum(es4d, d_spectra_rphi[:, :, ss, 1, :, :], dpdx)
             if derivatives.y:
                 if type(stations) is RegularlyDistributedReceivers:
-                    drdy = np.tile(-np.sin(stations.pp), stations.nr).reshape(
+                    drdy = np.tile(-np.sin(stations.pp), [stations.nr]).reshape(
                         stations.nr, stations.nphi
                     )
                     dpdy = np.outer(-1 / stations.rr, np.cos(stations.pp))
@@ -1860,7 +1860,7 @@ def compute_seismograms(
         # Rotate from (radial/transverse/z to xyz (enz))
         if type(stations) is RegularlyDistributedReceivers:
             rotator = np.zeros([stations.nr, stations.nphi, 3, 3],dtype=np.complex128)
-            phi = np.tile(stations.pp, stations.nr).reshape(stations.nr, stations.nphi)
+            phi = np.tile(stations.pp, [stations.nr]).reshape(stations.nr, stations.nphi)
             rotator[:, :, 0, 0] = np.cos(phi)
             rotator[:, :, 0, 1] = -np.sin(phi)
             rotator[:, :, 1, 0] = np.sin(phi)
@@ -2075,7 +2075,7 @@ def compute_static(
             es = "rpic,srpcw,%s->srp%sw" % eslos
             esd = "rpic,srpdcw,%s->srpd%sw" % eslos
             rotator = np.zeros([stations.nr, stations.nphi, 3, 3])
-            phi = np.tile(stations.pp, stations.nr).reshape(stations.nr, stations.nphi)
+            phi = np.tile(stations.pp, [stations.nr]).reshape(stations.nr, stations.nphi)
             rotator[:, :, 0, 0] = np.cos(phi)
             rotator[:, :, 0, 1] = -np.sin(phi)
             rotator[:, :, 1, 0] = np.sin(phi)
@@ -2134,11 +2134,11 @@ def compute_static(
                         "ric,srcw,%s->sr%sw" % eslos, dRdx, spectra, los_vector
                     )
             elif type(stations) is RegularlyDistributedReceivers:
-                phi = np.tile(stations.pp, stations.nr).reshape(
+                phi = np.tile(stations.pp, [stations.nr]).reshape(
                     stations.nr, stations.nphi
                 )
                 rr = (
-                    np.tile(stations.rr, stations.nphi)
+                    np.tile(stations.rr, [stations.nphi])
                     .reshape(stations.nphi, stations.nr)
                     .T
                 )

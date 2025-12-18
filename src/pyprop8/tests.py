@@ -10,6 +10,11 @@ def tests():
     print("Running tests. Using `pyprop8` from: %s" % pp.__file__)
     print("")
     print(" 1. Creating objects")
+    
+    #################################################
+    #   Structural Grads will be more difficult     #
+    #            Leave for now                      #
+    #################################################
     model = pp.LayeredStructureModel(
         [
             (3.0, 1.8, 0.0, 1.02),
@@ -19,38 +24,40 @@ def tests():
             (np.inf, 8.0, 4.56, 3.34),
         ]
     )
-    strike = np.deg2rad(np.tensor(340))
-    dip = np.deg2rad(np.tensor(70))
-    rake = np.deg2rad(np.tensor(20))
-   
-    strike = strike.to(np.complex128)
-    dip = dip.to(np.complex128)
-    rake = rake.to(np.complex128)
-   
-    m0=np.tensor(2.4e8).to(np.complex128)
-    eta =np.tensor(0).to(np.complex128)
-    xtr =np.tensor(0).to(np.complex128)
+    
+    ######################################################
+    ################Source Param Grad test################
+    ######################################################
+    ######################################################
+    strike = np.deg2rad(np.tensor(340.))
+    dip = np.deg2rad(np.tensor(70.))
+    rake = np.deg2rad(np.tensor(20.))
+    m0=np.tensor(2.4e8)
+    eta =np.tensor(0.)
+    xtr =np.tensor(0.)
 
-
-    strike.requires_grad_()
-    dip.requires_grad_()
-    rake.requires_grad_()
-   
-    m0.requires_grad_()
-    eta.requires_grad_()
-    xtr.requires_grad_()
     Mrtp = make_moment_tensor(strike,dip,rake,m0,eta,xtr)
-
-    Mxyz = rtf2xyz(Mrtp)
+    Mxyz = rtf2xyz(Mrtp).to(np.complex128)
     Mxyz.requires_grad_()
+   
+    x = np.tensor(0.).to(np.complex128).requires_grad_()
+    y =  np.tensor(0.).to(np.complex128).requires_grad_()
+    d = np.tensor(20.).to(np.complex128).requires_grad_()
+    F = np.zeros([3, 1]).to(np.complex128).requires_grad_()
+    t = np.tensor(0.).to(np.complex128).requires_grad_()
+
+
     source = pp.PointSource(
-        np.tensor(0.,requires_grad=True).to(np.complex128),
-        np.tensor(0.,requires_grad=True).to(np.complex128),
-        np.tensor(20.,requires_grad=True).to(np.complex128),
+        x,
+        y,
+        d,
         Mxyz,
-        np.zeros([3, 1],requires_grad=True).to(np.complex128),
-        np.tensor(0.,requires_grad=True).to(np.complex128),
+        F,
+        t,
     )
+    #################################################################
+    #################################################################
+    ################################################################
     stations = pp.RegularlyDistributedReceivers(
         30, 100, 7, 0, 360, 10, depth=3
     ).asListOfReceivers()
@@ -225,19 +232,23 @@ def tests():
         "       Worst-case difference between 'true' and finite-difference derivatives: %.3f%%"
         % (perc_err_z.max())
     )
-    print(seis0.requires_grad)
+ 
+    ##################################################
+    #####One step optimisation to test autodiff#######
+    ##################################################
     loss_fn = np.nn.L1Loss()
+    optim = np.optim.Adam([Mxyz],1)
     l = loss_fn(np.zeros_like(seis0,dtype=np.complex128),seis0)
-    print(l.dtype)
-    print(strike.grad_fn)
-    
     l.backward()
-    
+    optim.step()
     print(Mxyz.grad)
-    print(f'{strike.grad},{dip.grad},{rake.grad},{m0.grad},{eta.grad},{xtr.grad}')
-
+    print(f'{x.grad},{y.grad},{d.grad},{F.grad},{t.grad}')
+    print(seis0.shape)
     fig,ax = plt.subplots()
-    ax.plot(tt.detach().numpy(),seis0[0,0].detach().numpy())
+    ax.plot(tt.detach().numpy(),seis0[35,0].detach().numpy(),label='x')
+    ax.plot(tt.detach().numpy(),seis0[35,1].detach().numpy(),label='y')
+    ax.plot(tt.detach().numpy(),seis0[35,2].detach().numpy(),label='z')
+    plt.legend()
     plt.show()
     
     

@@ -177,7 +177,7 @@ def make_moment_tensor(strike, dip, rake, M0, eta=0, xtr=0):
     t = (e + n) / np.sqrt(np.tensor(2))
     p = (e - n) / np.sqrt(np.tensor(2))
     ev = M0 * np.tensor([-1 - 0.5 * eta + 0.5 * xtr, eta, 1 - 0.5 * eta + 0.5 * xtr])
-    fmom = np.zeros(6,dtype=np.complex128)
+    fmom = np.zeros(6)
     fmom[:3] = ev[0] * p**2 + ev[1] * b**2 + ev[2] * t**2
     fmom[3] = ev[0] * p[0] * p[1] + ev[1] * b[0] * b[1] + ev[2] * t[0] * t[1]
     fmom[4] = ev[0] * p[0] * p[2] + ev[1] * b[0] * b[2] + ev[2] * t[0] * t[2]
