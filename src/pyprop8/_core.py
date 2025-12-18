@@ -942,10 +942,10 @@ def compute_spectra(
     # Set up Bessel function tensors
     # We have 5 orders (mm), calculated for all the wavenumbers (nk) and all the radii (nr)
     # k  is 1D, 
-    print( np.outer(k, stations.rr).flatten(0,1).repeat(5,1).T.shape)
+    #print( np.outer(k, stations.rr).flatten(0,1).repeat(5,1).T.shape)
     
     mm = np.arange(-2, 3)
-    print(np.tile(mm, [1]).shape)
+    #print(np.tile(mm, [1]).shape)
     
     # jv = spec.jv(np.tile(mm, [nr * nk]), np.outer(k, stations.rr).repeat_interleave(5)).reshape(
     #     nk, nr, 5
@@ -1744,7 +1744,7 @@ def compute_seismograms(
     tt = np.arange(nt + npad) * dt
     if alpha is None:
         # Use 'rule of thumb' given in O'Toole & Woodhouse (2011)
-        alpha = np.log(10) / tt[-1]
+        alpha = np.log(np.tensor(10)) / tt[-1]
     ww = 2 * np.pi * np.fft.rfftfreq(nt + npad, dt)
     delta_omega = ww[1]
     ww = ww - alpha * 1j

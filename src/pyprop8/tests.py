@@ -236,6 +236,7 @@ def tests():
     ##################################################
     #####One step optimisation to test autodiff#######
     ##################################################
+    print(Mxyz)
     loss_fn = np.nn.L1Loss()
     optim = np.optim.Adam([Mxyz],1)
     l = loss_fn(np.zeros_like(seis0,dtype=np.complex128),seis0)
