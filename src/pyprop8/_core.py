@@ -1966,7 +1966,7 @@ def compute_static(
     structure,
     source,
     stations,
-    los_vector=np.eye(3),
+    los_vector=None,
     derivatives=None,
     squeeze_outputs=True,
     **kwargs
@@ -2026,6 +2026,9 @@ def compute_static(
         :py:func:`numpy.squeeze` will be called, discarding dimensions with only
         one entry.
     """
+    if los_vector is None:
+        los_vector = np.eye(3)
+    
     if derivatives is None:
         do_derivatives = False
     else:
