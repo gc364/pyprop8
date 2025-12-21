@@ -937,7 +937,7 @@ def compute_spectra(
     dz, sigma, mu, rho, isrc, irec, src_added, rec_added = structure.with_interfaces(
         source.dep, stations.depth
     )
-    assert irec < isrc, "Receivers must be above source"
+    #assert irec < isrc, "Receivers must be above source"
 
     # Set up Bessel function tensors
     # We have 5 orders (mm), calculated for all the wavenumbers (nk) and all the radii (nr)
