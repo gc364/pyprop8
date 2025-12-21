@@ -106,7 +106,7 @@ def underlyingHalfspaceBoundary(omega, k, sigma, mu, rho, sh=False):
         zsig = np.sqrt(k**2 - rho * omega**2 / sigma)
         # xi <-- (2011) Eq. 91
         xi = np.zeros_like(zsig).to(np.complex128)
-        xi[k == 0] = np.sqrt(mu / sigma)
+        xi[k == 0] = np.sqrt(mu / sigma).to(np.complex128)
         xi[k > 0] = (rho * omega**2 / sigma - k[k > 0] ** 2 * (1 + mu / sigma)) / (
             k[k > 0] ** 2 + zsig[k > 0] * zmu[k > 0]
         )
