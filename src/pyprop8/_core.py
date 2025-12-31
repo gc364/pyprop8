@@ -937,6 +937,11 @@ def compute_spectra(
     dz, sigma, mu, rho, isrc, irec, src_added, rec_added = structure.with_interfaces(
         source.dep, stations.depth
     )
+    
+    dz = dz.to(np.complex128)
+    sigma = sigma.to(np.complex128)
+    mu = mu.to(np.complex128)
+    rho = rho.to(np.complex128)
     #assert irec < isrc, "Receivers must be above source"
 
     # Set up Bessel function tensors
