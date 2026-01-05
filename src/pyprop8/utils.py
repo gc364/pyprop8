@@ -156,40 +156,76 @@ def make_moment_tensor(strike, dip, rake, M0, eta=0, xtr=0):
     # dip_r = np.deg2rad(np.tensor(dip))
     # rake_r = np.deg2rad(np.tensor(rake))
     
-    sv = np.tensor([0.0, -np.cos(strike), np.sin(strike)])
-    d = np.tensor(
-        [
-            -np.sin(dip),
-            np.cos(dip) * np.sin(strike),
-            np.cos(dip) * np.cos(strike),
-        ]
+    #sv = np.tensor([0.0, -np.cos(strike), np.sin(strike)])
+    sv = np.zeros(size=[3])
+    sv[0] = 0.0
+    sv[1] = -np.cos(strike)
+    sv[2] = np.sin(strike)
+    
+    
+    # d = np.tensor(
+    #     [
+    #         -np.sin(dip),
+    #         np.cos(dip) * np.sin(strike),
+    #         np.cos(dip) * np.cos(strike),
+    #     ]   
+    # )
+    d = np.zeros(size=[3])
+    d[0] =  -np.sin(dip)
+    d[1]=    np.cos(dip) * np.sin(strike)
+    d[2]=    np.cos(dip) * np.cos(strike)
+
+    # n = np.tensor(
+    #     [
+    #         np.cos(dip),
+    #         np.sin(dip) * np.sin(strike),
+    #         np.sin(dip) * np.cos(strike),
+    #     ]
+    # )
+    n= np.zeros(size=[3])
+    n[0]=np.cos(dip)
+    n[1]=np.sin(dip) * np.sin(strike)
+    n[2]=np.sin(dip) * np.cos(strike)
         
-    )
-    n = np.tensor(
-        [
-            np.cos(dip),
-            np.sin(dip) * np.sin(strike),
-            np.sin(dip) * np.cos(strike),
-        ]
-    )
+
+
+    
     e = sv * np.cos(rake) - d * np.sin(rake)
     b = np.cross(e, n,dim=-1)
     t = (e + n) / np.sqrt(np.tensor(2))
     p = (e - n) / np.sqrt(np.tensor(2))
-    ev = M0 * np.tensor([-1 - 0.5 * eta + 0.5 * xtr, eta, 1 - 0.5 * eta + 0.5 * xtr])
-    fmom = np.zeros(6)
+    # ev = M0 * np.tensor([-1 - 0.5 * eta + 0.5 * xtr, eta, 1 - 0.5 * eta + 0.5 * xtr])
+    ev= np.zeros(size=[3])
+    ev[0] = -1 - 0.5 * eta + 0.5 * xtr
+    ev[1] = eta
+    ev[2] = 1 - 0.5 * eta + 0.5 * xtr
+
+    ev = M0*ev
+    
+    
+    fmom = np.zeros([6])
     fmom[:3] = ev[0] * p**2 + ev[1] * b**2 + ev[2] * t**2
     fmom[3] = ev[0] * p[0] * p[1] + ev[1] * b[0] * b[1] + ev[2] * t[0] * t[1]
     fmom[4] = ev[0] * p[0] * p[2] + ev[1] * b[0] * b[2] + ev[2] * t[0] * t[2]
     fmom[5] = ev[0] * p[1] * p[2] + ev[1] * b[1] * b[2] + ev[2] * t[1] * t[2]
-    M = np.tensor(
-        [
-            [fmom[0], fmom[3], fmom[4]],
-            [fmom[3], fmom[1], fmom[5]],
-            [fmom[4], fmom[5], fmom[2]],
-        ]
+    # M = np.tensor(
+    #     [
+    #         [fmom[0], fmom[3], fmom[4]],
+    #         [fmom[3], fmom[1], fmom[5]],
+    #         [fmom[4], fmom[5], fmom[2]],
+    #     ]
         
-    )
+    # )
+    M= np.zeros(size=(3,3))
+    M[0,0] = fmom[0]
+    M[0,1] = fmom[3]
+    M[0,2] = fmom[4]
+    M[1,0] = fmom[3]
+    M[1,1] = fmom[1]
+    M[1,2] = fmom[5]
+    M[2,0] = fmom[4]
+    M[2,1] = fmom[5]
+    M[2,2] = fmom[2]
     return M
 
 
@@ -204,13 +240,24 @@ def rtf2xyz(M):
     # # M2[1,:]*=-1
     # # M2[:,1]*=-1
 
-    M2 = np.tensor(
-        [
-            [M[2, 2], -M[2, 1], M[2, 0]],
-            [-M[1, 2], M[1, 1], -M[1, 0]],
-            [M[0, 2], -M[0, 1], M[0, 0]],
-        ]
-    )
+    # M2 = np.tensor(
+    #     [
+    #         [M[2, 2], -M[2, 1], M[2, 0]],
+    #         [-M[1, 2], M[1, 1], -M[1, 0]],
+    #         [M[0, 2], -M[0, 1], M[0, 0]],
+    #     ]
+    # )
+    
+    M2 = np.zeros(size=(3,3))
+    M2[0,0] = M[2, 2]
+    M2[0,1] = -M[2, 1]
+    M2[0,2] = M[2, 0]
+    M2[1,0] = -M[1, 2]
+    M2[1,1] = M[1, 1]
+    M2[1,2] = -M[1, 0]
+    M2[2,0] = M[0, 2]
+    M2[2,1] = -M[0, 1]
+    M2[2,2] = M[0, 0]
     return M2
 
 

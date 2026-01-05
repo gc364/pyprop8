@@ -29,22 +29,22 @@ def tests():
     ################Source Param Grad test################
     ######################################################
     ######################################################
-    strike = np.deg2rad(np.tensor(340.))
-    dip = np.deg2rad(np.tensor(70.))
-    rake = np.deg2rad(np.tensor(20.))
-    m0=np.tensor(2.4e8)
-    eta =np.tensor(0.)
-    xtr =np.tensor(0.)
+    strike = np.deg2rad(np.tensor(340.)).requires_grad_()
+    dip = np.deg2rad(np.tensor(70.)).requires_grad_()
+    rake = np.deg2rad(np.tensor(20.)).requires_grad_()
+    m0=np.tensor(2.4e8).requires_grad_()
+    eta =np.tensor(0.).requires_grad_()
+    xtr =np.tensor(0.).requires_grad_()
 
     Mrtp = make_moment_tensor(strike,dip,rake,m0,eta,xtr)
-    Mxyz = rtf2xyz(Mrtp).to(np.complex128)
-    Mxyz.requires_grad_()
+    Mxyz = rtf2xyz(Mrtp)##.to(np.complex128)
+    Mxyz.retain_grad()
    
-    x = np.tensor(0.).to(np.complex128).requires_grad_()
-    y =  np.tensor(0.).to(np.complex128).requires_grad_()
-    d = np.tensor(20.).to(np.complex128).requires_grad_()
-    F = np.zeros([3, 1]).to(np.complex128).requires_grad_()
-    t = np.tensor(0.).to(np.complex128).requires_grad_()
+    x = np.tensor(0.).requires_grad_()
+    y =  np.tensor(0.).requires_grad_()
+    d = np.tensor(20.).requires_grad_()
+    F = np.zeros([3, 1]).to(np.complex128).requires_grad_() #This needs to be complex when passed
+    t = np.tensor(0.).requires_grad_()
 
 
     source = pp.PointSource(
@@ -236,13 +236,15 @@ def tests():
     ##################################################
     #####One step optimisation to test autodiff#######
     ##################################################
+    print([strike,dip,rake,m0,eta,xtr])
     print(Mxyz)
     loss_fn = np.nn.L1Loss()
-    optim = np.optim.Adam([Mxyz],1)
+    optim = np.optim.Adam([strike,dip,rake,m0,eta,xtr],1)
     l = loss_fn(np.zeros_like(seis0,dtype=np.complex128),seis0)
     l.backward()
     optim.step()
     print(Mxyz.grad)
+    print([strike.grad,dip.grad,rake.grad,m0.grad,eta.grad,xtr.grad])
     print(f'{x.grad},{y.grad},{d.grad},{F.grad},{t.grad}')
     print(seis0.shape)
     fig,ax = plt.subplots()
