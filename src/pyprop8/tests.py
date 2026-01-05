@@ -12,8 +12,7 @@ def tests():
     print(" 1. Creating objects")
     
     #################################################
-    #   Structural Grads will be more difficult     #
-    #            Leave for now                      #
+    #       Structure setup and gradient init       #
     #################################################
     model = pp.LayeredStructureModel(
         [
@@ -24,6 +23,10 @@ def tests():
             (np.inf, 8.0, 4.56, 3.34),
         ]
     )
+    model.sigma.requires_grad_()
+    model.mu.requires_grad_()
+    model.rho.requires_grad_()
+    model.dz.requires_grad_()
     
     ######################################################
     ################Source Param Grad test################
@@ -37,14 +40,14 @@ def tests():
     xtr =np.tensor(0.).requires_grad_()
 
     Mrtp = make_moment_tensor(strike,dip,rake,m0,eta,xtr)
-    Mxyz = rtf2xyz(Mrtp)##.to(np.complex128)
+    Mxyz = rtf2xyz(Mrtp)
     Mxyz.retain_grad()
    
-    x = np.tensor(0.).requires_grad_()
-    y =  np.tensor(0.).requires_grad_()
+    x = np.tensor(0.)
+    y =  np.tensor(0.)
     d = np.tensor(20.).requires_grad_()
-    F = np.zeros([3, 1]).to(np.complex128).requires_grad_() #This needs to be complex when passed
-    t = np.tensor(0.).requires_grad_()
+    F = np.zeros([3, 1]).requires_grad_() 
+    t = np.tensor(0.)
 
 
     source = pp.PointSource(
@@ -236,17 +239,40 @@ def tests():
     ##################################################
     #####One step optimisation to test autodiff#######
     ##################################################
-    print([strike,dip,rake,m0,eta,xtr])
+    np.autograd.set_detect_anomaly(True)
+    print('INPUT PARAMETERS')
+    params = [strike,dip,rake,m0,eta,xtr,d,F]
+    labels = ['strike','dip','rake','M0','eta','xtr','d','F']
+    print(params)
     print(Mxyz)
+
+    print('SOURCE SENSITIVITY GRADIENTS')
+    seis0.backward(np.ones_like(seis0),retain_graph=True)
+    print(Mxyz.grad)
+    for l,p in zip(labels,params):
+        print(f'{l}: {p.grad}')
+    print('STRUCTURE SENSITIVITY GRADIENTS')
+    print(fr'{r'$\delta$z'}: {model.dz.grad}')
+    print(fr'{r'$\mu$'}: {model.mu.grad}')
+    print(fr'{r'$\sigma$'}: {model.sigma.grad}')
+    print(fr'{r'$\rho$'}: {model.rho.grad}')
+
+
+    for p in params:
+        p.grad = np.ones_like(p)
+    
+    print('SOURCE OPTIMISATION GRADIENTS')
     loss_fn = np.nn.L1Loss()
-    optim = np.optim.Adam([strike,dip,rake,m0,eta,xtr],1)
+    optim = np.optim.Adam(params,1)
     l = loss_fn(np.zeros_like(seis0,dtype=np.complex128),seis0)
     l.backward()
     optim.step()
+    
     print(Mxyz.grad)
-    print([strike.grad,dip.grad,rake.grad,m0.grad,eta.grad,xtr.grad])
-    print(f'{x.grad},{y.grad},{d.grad},{F.grad},{t.grad}')
-    print(seis0.shape)
+    for l,p in zip(labels,params):
+        print(f'{l}: {p.grad}')
+    
+
     fig,ax = plt.subplots()
     ax.plot(tt.detach().numpy(),seis0[35,0].detach().numpy(),label='x')
     ax.plot(tt.detach().numpy(),seis0[35,1].detach().numpy(),label='y')

@@ -141,7 +141,7 @@ def sourceVector(MT, F, k, sigma, mu):
     s = np.zeros([nk, 4, 5], dtype=np.complex128)  # P-SV system, eq.21
     s2 = np.zeros([nk, 2, 5], dtype=np.complex128)  # SH system, eq. 22
     s[:, 0, 2] = MT[2, 2] / sigma
-    s[:, 2, 2] = -F[2]
+    s[:, 2, 2] = -F[2].to(np.complex128)    #   OH: This cast maintains the grad type mismatch in backward() 
     s[:, 3, 2] = (
         0.5 * k * (MT[0, 0] + MT[1, 1]) - k * (sigma - 2 * mu) * MT[2, 2] / sigma
     )
