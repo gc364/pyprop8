@@ -848,6 +848,8 @@ def compute_spectra(
     stencil=kIntegrationStencil,
     stencil_kwargs={"kmin": 0, "kmax": 2.04, "nk": 1200},
     squeeze_outputs=True,
+    H_psvNN =None,
+    H_shNN = None
 ):
     """
     Calculate and return velocity spectra for a given source and earth model at
@@ -874,6 +876,8 @@ def compute_spectra(
     :param dict stencil_kwargs: Arguments that will be passed to stencil()
     :param bool squeeze_outputs: If true, apply :py:func:`numpy.squeeze` to all
         output tensors to eliminate dimensions of size '1'.
+    :param torch.tensor H_psvNN: The H_psv matrix to be used if not calculated internally
+    :param torch.tensor H_shNN: The H_sh matrix to be used if not calculated internally
 
     The output of ``compute_spectra`` depends on the value of the ``derivatives``
     parameter.
@@ -934,7 +938,7 @@ def compute_spectra(
     nk = k.shape[0]
     k_wts /= 2 * np.pi
 
-    dz, sigma, mu, rho, isrc, irec, src_added, rec_added = structure.with_interfaces(
+    dz, sigma, mu, rho, isrc, irec, src_added, rec_added = structure.with_interfaces(   #isrc,irec are fake layers for the src and receiver
         source.dep, stations.depth
     )
     
@@ -1065,10 +1069,12 @@ def compute_spectra(
                 H_psv, H_sh, d_H_psv, d_H_sh = H
             else:
                 H_psv, H_sh = H
+        elif (H_psvNN is not None )and (H_shNN is not None):
+            H_psv,H_sh = H_psvNN[iom],H_shNN[iom]
         else:
             H_psv, H_sh = compute_H_matrices(
                 k[k != 0], omega, dz, sigma, mu, rho, isrc, irec
-            )
+            )  
 
         b = np.zeros([nk, nsources, 6, 5], dtype=np.complex128)
         for i in range(nsources):
@@ -1662,6 +1668,8 @@ def compute_seismograms(
     show_progress=True,
     squeeze_outputs=True,
     number_of_processes=1,
+    H_psvNN = None,
+    H_shNN=None,
     **kwargs
 ):
     """
@@ -1703,8 +1711,11 @@ def compute_seismograms(
         performing computations. If >1, the `multiprocessing` module will be
         used, splitting up the frequency band across processs. Due to the cost
         of creating and managing separate processes, more is not always faster.
+    :param torch.tensor H_psvNN: The H_psv matrix to be used if not calculated internally
+    :param torch.tensor H_shNN: The H_sh matrix to be used if not calculated internally
     :param bool \**kwargs: Any additional keyword options will be passed to
         :py:func:`~pyprop8.compute_spectra`.
+    
 
     The output of ``compute_seismograms`` depends on value of the ``derivatives``
     parameter.
@@ -1770,7 +1781,9 @@ def compute_seismograms(
             derivatives,
             show_progress,
             squeeze_outputs=False,
-            **kwargs
+            H_psvNN=H_psvNN,
+            H_shNN=H_shNN,
+            stencil_kwargs={"kmin": 0, "kmax": 2.04, "nk": 1200} if not kwargs else kwargs
         )
         if derivatives is not None:
             # Test on derivatives, not do_derivatives, as will return d_spectra as None if derivatives provided but all off

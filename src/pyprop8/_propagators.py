@@ -1075,7 +1075,7 @@ def compute_H_matrices(k, omega, dz, sigma, mu, rho, isrc, irec, do_derivatives=
         surface_bc_sh = freeSurfaceBoundary(k.shape[0], True)
         surface_bc_psv = freeSurfaceBoundary(k.shape[0], False)
         ibc = 0
-
+    #Propogators from top BC to Receiver
     for i in range(ibc, irec):
         # Deal with derivatives first - before we do in-place propagation of the vectors
         if do_derivatives:

@@ -75,7 +75,7 @@ def tests():
     dt = 1
     alpha = 0.023
     pad_frac = 1
-
+    kwargs = {"kmin": 0, "kmax": 2.04, "nk": 1200} #nk=1200 is the default, decrease for H-matrix estimation
     tt, seis0,drv = pp.compute_seismograms(
         model,
         source,
@@ -87,6 +87,7 @@ def tests():
         derivatives=derivs,
         source_time_function=source_time_function,
         xyz=True,
+        **kwargs
     )
 
     epsilon = 1e-4
@@ -110,6 +111,7 @@ def tests():
         derivatives=None,
         source_time_function=source_time_function,
         xyz=True,
+        **kwargs
     )
 
     fd = (seis_x - seis0) / epsilon  # finite difference estimate
@@ -139,6 +141,7 @@ def tests():
         derivatives=None,
         source_time_function=source_time_function,
         xyz=True,
+        **kwargs
     )
 
     fd = (seis_y - seis0) / epsilon  # finite difference estimate
@@ -168,6 +171,7 @@ def tests():
         derivatives=None,
         source_time_function=source_time_function,
         xyz=True,
+        **kwargs
     )
 
     fd = (seis_z - seis0) / epsilon  # finite difference estimate
