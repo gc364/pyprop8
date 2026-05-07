@@ -1,5 +1,3 @@
-import sys
-sys.path.insert(1,'/Users/Oscar/OneDrive - Durham University/University/Year3/pyprop8/src')
 import pyprop8 as pp
 from pyprop8.utils import stf_trapezoidal, make_moment_tensor, rtf2xyz
 import torch as np

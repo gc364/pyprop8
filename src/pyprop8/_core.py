@@ -1211,10 +1211,10 @@ def compute_spectra(
         spectra[:, :, ss, 0, iom] = np.einsum(es1, k * k_wts, b[:, :, 1, :], jvp, eimphi, #optimize=plan_1
         ) + \
         np.einsum(
-            es2, 1j * mm, b[:, :, 4, :], jv, rr_inv, k_wts, eimphi, #optimize=plan_2
+            es2, 1j * mm, b[:, :, 4, :], jv, rr_inv.to(np.complex128), k_wts.to(np.complex128), eimphi, #optimize=plan_2
         )
         spectra[:, :, ss, 1, iom] = np.einsum(
-            es2, 1j * mm, b[:, :, 1, :], jv, rr_inv, k_wts, eimphi, #optimize=plan_2
+            es2, 1j * mm, b[:, :, 1, :], jv, rr_inv.to(np.complex128), k_wts.to(np.complex128), eimphi, #optimize=plan_2
         ) - np.einsum(es1, k * k_wts, b[:, :, 4, :], jvp, eimphi, #optimize=plan_1
                       )
         spectra[:, :, ss, 2, iom] = np.einsum(
@@ -1235,8 +1235,8 @@ def compute_spectra(
                     1j * mm,
                     d_b[:, :, j0 : j0 + 6, 4, :],
                     jv,
-                    rr_inv,
-                    k_wts,
+                    rr_inv.to(np.complex128),
+                    k_wts.to(np.complex128),
                     eimphi,
                     #optimize=plan_2d,
                 )
@@ -1245,8 +1245,8 @@ def compute_spectra(
                     1j * mm,
                     d_b[:, :, j0 : j0 + 6, 1, :],
                     jv,
-                    rr_inv,
-                    k_wts,
+                    rr_inv.to(np.complex128),
+                    k_wts.to(np.complex128),
                     eimphi,
                     #optimize=plan_2d,
                 ) - np.einsum(
@@ -1279,8 +1279,8 @@ def compute_spectra(
                     1j * mm,
                     d_b[:, :, j0 : j0 + 3, 4, :],
                     jv,
-                    rr_inv,
-                    k_wts,
+                    rr_inv.to(np.complex128),
+                    k_wts.to(np.complex128),
                     eimphi,
                     #optimize=plan_2d,
                 )
@@ -1289,8 +1289,8 @@ def compute_spectra(
                     1j * mm,
                     d_b[:, :, j0 : j0 + 3, 1, :],
                     jv,
-                    rr_inv,
-                    k_wts,
+                    rr_inv.to(np.complex128),
+                    k_wts.to(np.complex128),
                     eimphi,
                     #optimize=plan_2d,
                 ) - np.einsum(
@@ -1320,8 +1320,8 @@ def compute_spectra(
                         1j * mm,
                         b[:, :, 4, :],
                         jv,
-                        rr_inv**2,
-                        k_wts,
+                        (rr_inv**2).to(np.complex128),
+                        k_wts.to(np.complex128),
                         eimphi,
                         #optimize=plan_2,
                     )
@@ -1330,7 +1330,7 @@ def compute_spectra(
                         1j * mm,
                         b[:, :, 4, :],
                         jvp,
-                        rr_inv,
+                        rr_inv.to(np.complex128),
                         k * k_wts,
                         eimphi,
                         #optimize=plan_2,
@@ -1342,8 +1342,8 @@ def compute_spectra(
                         -1j * mm,
                         b[:, :, 1, :],
                         jv,
-                        rr_inv**2,
-                        k_wts,
+                        (rr_inv**2).to(np.complex128),
+                        k_wts.to(np.complex128),
                         eimphi,
                         #optimize=plan_2,
                     )
@@ -1352,7 +1352,7 @@ def compute_spectra(
                         1j * mm,
                         b[:, :, 1, :],
                         jvp,
-                        rr_inv,
+                        rr_inv.to(np.complex128),
                         k * k_wts,
                         eimphi,
                         #optimize=plan_2,
@@ -1414,8 +1414,8 @@ def compute_spectra(
                             1j * mm,
                             b[:, :, 4, :],
                             jv,
-                            rr_inv**2,
-                            k_wts,
+                            (rr_inv**2).to(np.complex128),
+                            k_wts.to(np.complex128),
                             eimphi,
                             #optimize=plan_2,
                         )
@@ -1424,8 +1424,8 @@ def compute_spectra(
                             1j * mm,
                             b[:, :, 4, :],
                             jvp,
-                            rr_inv,
-                            k * k_wts,
+                            rr_inv.to(np.complex128),
+                            (k * k_wts).to(np.complex128),
                             eimphi,
                             #optimize=plan_2,
                         )
@@ -1436,8 +1436,8 @@ def compute_spectra(
                             -1j * mm,
                             b[:, :, 1, :],
                             jv,
-                            rr_inv**2,
-                            k_wts,
+                            (rr_inv**2).to(np.complex128),
+                            k_wts.to(np.complex128),
                             eimphi,
                             #optimize=plan_2,
                         )
@@ -1446,8 +1446,8 @@ def compute_spectra(
                             1j * mm,
                             b[:, :, 1, :],
                             jvp,
-                            rr_inv,
-                            k * k_wts,
+                            rr_inv.to(np.complex128),
+                            (k * k_wts).to(np.complex128),
                             eimphi,
                             #optimize=plan_2,
                         )
@@ -1481,8 +1481,8 @@ def compute_spectra(
                         -mm * mm,
                         b[:, :, 4, :],
                         jv,
-                        rr_inv,
-                        k_wts,
+                        rr_inv.to(np.complex128),
+                        k_wts.to(np.complex128),
                         eimphi,
                         #optimize=plan_2,
                     )
@@ -1491,8 +1491,8 @@ def compute_spectra(
                         -mm * mm,
                         b[:, :, 1, :],
                         jv,
-                        rr_inv,
-                        k_wts,
+                        rr_inv.to(np.complex128),
+                        k_wts.to(np.complex128),
                         eimphi,
                         #optimize=plan_2,
                     ) - np.einsum(
@@ -1522,8 +1522,8 @@ def compute_spectra(
                     1j * mm,
                     d_b[:, :, j0, 4, :],
                     jv,
-                    rr_inv,
-                    k_wts,
+                    rr_inv.to(np.complex128),
+                    k_wts.to(np.complex128),
                     eimphi,
                     #optimize=plan_2,
                 )
@@ -1532,8 +1532,8 @@ def compute_spectra(
                     1j * mm,
                     d_b[:, :, j0, 1, :],
                     jv,
-                    rr_inv,
-                    k_wts,
+                    rr_inv.to(np.complex128),
+                    k_wts.to(np.complex128),
                     eimphi,
                     #optimize=plan_2,
                 ) - np.einsum(
@@ -1562,8 +1562,8 @@ def compute_spectra(
                         1j * mm,
                         d_b[:, :, j0 + j, 4, :],
                         jv,
-                        rr_inv,
-                        k_wts,
+                        rr_inv.to(np.complex128),
+                        k_wts.to(np.complex128),
                         eimphi,
                         #optimize=plan_2,
                     )
@@ -1572,8 +1572,8 @@ def compute_spectra(
                         1j * mm,
                         d_b[:, :, j0 + j, 1, :],
                         jv,
-                        rr_inv,
-                        k_wts,
+                        rr_inv.to(np.complex128),
+                        k_wts.to(np.complex128),
                         eimphi,
                         #optimize=plan_2,
                     ) - np.einsum(
@@ -1853,12 +1853,12 @@ def compute_seismograms(
     stencil[:, 0] *= 0.5
     stencil[0, 0] = 0
     seis = (nt + npad) * delta_omega * np.fft.irfft(spectra, nt + npad).to(np.complex128) / (2 * np.pi)
-    seis = np.einsum(est, stencil, seis, np.exp(alpha * tt))
+    seis = np.einsum(est, stencil.to(np.complex128), seis, np.exp(alpha * tt).to(np.complex128))
     if do_derivatives:
         deriv = (
             (nt + npad) * delta_omega * np.fft.irfft(d_spectra, nt + npad).to(np.complex128) / (2 * np.pi)
         )
-        deriv = np.einsum(estd, stencil, deriv, np.exp(alpha * tt))
+        deriv = np.einsum(estd, stencil.to(np.complex128), deriv, np.exp(alpha * tt).to(np.complex128))
     # This doesn't seem to be very stable. I wonder if the better way to get
     # velocity is to force the user to do it themselves -- get a time series and then
     # differentiate as required.

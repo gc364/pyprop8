@@ -21,13 +21,6 @@ These are some things to note when using the `pytorch` version.
 
 2.  The inputs must all be a `torch.Tensor` not a `numpy.ndarray`. You'll know if you've missed anything as error will be thrown
 
-3.  The number of receivers must be greater than 5. If not you'll hit a type error during the integration. I will fix this
-    properly soon but the cause is elusive, so for now it's easier to just pick more than 5 receivers and only use the ones you're
-    interested in.
-
-
-
-
 # pyprop8
 
 This package provides a lightweight Python implementation of the seismogram calculation algorithm set out in [O'Toole & Woodhouse (2011)](https://doi.org/10.1111/j.1365-246X.2011.05210.x), together with the source derivatives set out in [O'Toole, Valentine & Woodhouse (2012)](https://doi.org/10.1111/j.1365-246X.2012.05608.x). It is intended to provide a lightweight, easy-to-install seismological forward model suitable for use in teaching and research (in particular, to provide a computationally-cheap yet physically-realistic forward problem for use in the development and testing of inversion algorithms).

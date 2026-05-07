@@ -1,5 +1,3 @@
-# import sys
-# sys.path.insert(1,'/Users/Oscar/OneDrive - Durham University/University/Year3/pyprop8/src')
 import pyprop8 as pp
 from pyprop8.utils import rtf2xyz,make_moment_tensor,stf_trapezoidal,stf_cosine,latlon2xy,stf_boxcar,stf_cosine_boxcar
 import numpy as np
@@ -16,7 +14,7 @@ may be some minor differences between the figures there and those output by this
 code.
 '''
 
-
+figpath = './figures'
 model_table_1 = pp.LayeredStructureModel([[ 3.00, 1.80, 0.00, 1.02],
                                           [ 2.00, 4.50, 2.40, 2.57],
                                           [ 5.00, 5.80, 3.30, 2.63],
@@ -61,6 +59,7 @@ ax.set_title("Vertical")
 for i in range(18):
     ax.plot(tt,seis[i,2,:]-50*i,'k')
 plt.show()
+plt.savefig(f'{figpath}/OW11_fig1.png',dpi=256)
 
 ### Figure 2 ###
 
@@ -100,7 +99,7 @@ c = plt.colorbar(sc,cax=ax,orientation='horizontal',label='Displacement (mm)')
 c.set_ticks([-amax,0,amax])
 plt.tight_layout()
 plt.show()
-
+plt.savefig(f'{figpath}/OW11_fig2.png',dpi=256)
 ### Figure 3
 stations = pp.RegularlyDistributedReceivers(100,110,9,80,90,9)
 
@@ -151,7 +150,7 @@ ax.set_xticks([0,60,120])
 ax.set_xlabel("Time (s)")
 plt.tight_layout()
 plt.show()
-
+plt.savefig(f'{figpath}/OW11_fig3.png',dpi=256)
 ### Figure 4 ###
 # Only the model is different...
 tt,seis = pp.compute_seismograms(model_table_2,source,stations,240,0.5,xyz=True,source_time_function = lambda w:stf_trapezoidal(w,6,3))
@@ -195,7 +194,7 @@ ax.set_xticks([0,60,120])
 ax.set_xlabel("Time (s)")
 plt.tight_layout()
 plt.show()
-
+plt.savefig(f'{figpath}/OW11_fig4.png',dpi=256)
 ### Figure 5 ###
 # The paper does not unambiguously define the precise setup and processing used
 # in this experiment, and the code I have from O'Toole is not sufficient to
@@ -220,3 +219,4 @@ ax.set_xlabel("Time (s)")
 ax.set_ylabel("Displacement (mm)")
 plt.tight_layout()
 plt.show()
+plt.savefig(f'{figpath}/OW11_fig5.png',dpi=256)

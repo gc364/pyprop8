@@ -1,5 +1,3 @@
-# import sys
-# sys.path.insert(1,'/Users/Oscar/Documents/pyprop8/src')
 import pyprop8 as pp
 from pyprop8.utils import rtf2xyz,make_moment_tensor,stf_trapezoidal,stf_cosine,latlon2xy,clp_filter
 import numpy as np
@@ -14,7 +12,7 @@ As various details are not fully and unambiguously defined in the paper, there
 may be some minor differences between the figures there and those output by this
 code.
 '''
-
+figpath = './figures'
 # Table 1:
 model = pp.LayeredStructureModel([[ 0.10, 3.20, 2.00, 2.10],
                                            [ 1.90, 5.15, 2.85, 2.50],
@@ -110,6 +108,7 @@ proxyp[0].set_label('pyprop8')
 ax.legend()
 plt.tight_layout()
 plt.show()
+plt.savefig(f'{figpath}/OVW12_fig1.png',dpi=256)
 
 fig = plt.figure()
 deriv[drv.i_z,:,:]*=10
@@ -147,3 +146,4 @@ for icomp in range(3):
     if icomp==0: ax.text(0,.7,"HRGPS synthetic",transform=ax.transAxes)
 plt.tight_layout()
 plt.show()
+plt.savefig(f'{figpath}/OVW12_fig2.png',dpi=256)

@@ -6,3 +6,5 @@ env/
 .DS_STORE
 .ipynb_checkpoints
 build
+.vscode
+*.png
