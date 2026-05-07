@@ -1208,9 +1208,9 @@ def compute_spectra(
             #         plan_2d, _ = np.einsum_path(
             #             es2d, 1j * mm, d_b[:, :, 0:6, 4, :], jv, rr_inv, k_wts, eimphi
             #         )
-        spectra[:, :, ss, 0, iom] = np.einsum(
-            es1, k * k_wts, b[:, :, 1, :], jvp, eimphi, #optimize=plan_1
-        ) + np.einsum(
+        spectra[:, :, ss, 0, iom] = np.einsum(es1, k * k_wts, b[:, :, 1, :], jvp, eimphi, #optimize=plan_1
+        ) + \
+        np.einsum(
             es2, 1j * mm, b[:, :, 4, :], jv, rr_inv, k_wts, eimphi, #optimize=plan_2
         )
         spectra[:, :, ss, 1, iom] = np.einsum(
@@ -1975,9 +1975,9 @@ def compute_seismograms(
         if do_derivatives:
             deriv = deriv.squeeze()
     if derivatives is None:
-        return tt[:nt], seis
+        return tt[:nt], seis.real
     else:
-        return tt[:nt], seis, deriv
+        return tt[:nt], seis.real, deriv
 
 
 def compute_static(

@@ -1,7 +1,12 @@
+import sys
+sys.path.insert(1,'/Users/Oscar/OneDrive - Durham University/University/Year3/pyprop8/src')
 import pyprop8 as pp
 from pyprop8.utils import rtf2xyz,make_moment_tensor,stf_trapezoidal,stf_cosine,latlon2xy,stf_boxcar,stf_cosine_boxcar
 import numpy as np
 import matplotlib.pyplot as plt
+import torch as tc
+import warnings
+
 
 '''This example aims to reproduce the various figures presented in
 O'Toole & Woodhouse (2011, doi: 10.1111/j.1365-246X.2011.05210.x).
@@ -32,8 +37,12 @@ model_table_2 = pp.LayeredStructureModel([[ 1.50, 2.20, 1.00, 2.20],
 ### Figure 1 ###
 # The following two specifications of station location ought to be equivalent.
 #stations = pp.RegularlyDistributedReceivers(30,200,18,90,90,1,depth=3)
-stations = pp.ListOfReceivers(xx = np.zeros(18),yy=np.linspace(30,200,18),depth=3)
-source =  pp.PointSource(0,0,34,rtf2xyz(make_moment_tensor(340,90,0,2.4E8,0,0)),np.zeros([3,1]), 0.)
+stations = pp.ListOfReceivers(xx = tc.zeros(18),yy=tc.linspace(30,200,18),depth=3)
+
+strike,dip,rake,M0,eta,xtra = tc.tensor(np.deg2rad(340)),tc.tensor(np.deg2rad(90)),tc.tensor(0),tc.tensor(2.4E8),tc.tensor(0),tc.tensor(0)
+F = tc.zeros([3,1])
+x,y,z = tc.tensor(0),tc.tensor(0),tc.tensor(34)
+source =  pp.PointSource(x,y,z,rtf2xyz(make_moment_tensor(strike,dip,rake,M0,eta,xtra)),F, tc.tensor(0.))
 tt,seis = pp.compute_seismograms(model_table_1, source, stations, 181,.5,xyz=False,source_time_function=lambda w:stf_cosine(w,4.5))
 
 fig = plt.figure(figsize=(6,10))
@@ -93,10 +102,16 @@ plt.tight_layout()
 plt.show()
 
 ### Figure 3
-stations = pp.RegularlyDistributedReceivers(100,110,2,80,80,1)
-source = pp.PointSource(0,0,10,rtf2xyz(make_moment_tensor(0,90,180,1.1E7,0,0)),np.zeros([3,1]), 0.)
-tt,seis = pp.compute_seismograms(model_halfspace,source,stations,240,0.5,xyz=True,source_time_function = lambda w:stf_trapezoidal(w,6,3))
+stations = pp.RegularlyDistributedReceivers(100,110,9,80,90,9)
 
+
+strike,dip,rake,M0,eta,xtra = tc.tensor(0),tc.tensor(np.deg2rad(90)),tc.tensor(np.deg2rad(180)),tc.tensor(1.1E7),tc.tensor(0),tc.tensor(0)
+F = tc.zeros([3,1])
+x,y,z = tc.tensor(0),tc.tensor(0),tc.tensor(10)
+
+source = pp.PointSource(x,y,z,rtf2xyz(make_moment_tensor(strike,dip,rake,M0,eta,xtra)),F, tc.tensor(0.))
+tt,seis = pp.compute_seismograms(model_halfspace,source,stations,240,0.5,xyz=True,source_time_function = lambda w:stf_trapezoidal(w,6,3))
+seis = seis[0]
 fig = plt.figure(figsize=(10,5))
 ax = fig.add_subplot(2,3,1)
 ax.set_title("North")
@@ -140,7 +155,7 @@ plt.show()
 ### Figure 4 ###
 # Only the model is different...
 tt,seis = pp.compute_seismograms(model_table_2,source,stations,240,0.5,xyz=True,source_time_function = lambda w:stf_trapezoidal(w,6,3))
-
+seis = seis[0]
 fig = plt.figure(figsize=(10,5))
 ax = fig.add_subplot(2,3,1)
 ax.set_title("North")
@@ -187,9 +202,15 @@ plt.show()
 # enable this to be reconstructed. The following gives results that are clearly
 # close to the original, but not identical.
 
-stations = pp.ListOfReceivers(np.array([22.383514667]),np.array([36.493270697]),depth=3,geometry='spherical')
-source = pp.PointSource(21.79,36.24,30,rtf2xyz(make_moment_tensor(332,6,120,2.4E7,0,0)),np.zeros([3,1]), 0.)
+
+strike,dip,rake,M0,eta,xtra = tc.tensor(np.deg2rad(332)),tc.tensor(np.deg2rad(6)),tc.tensor(np.deg2rad(120)),tc.tensor(2.4E7),tc.tensor(0),tc.tensor(0)
+F = tc.zeros([3,1])
+x,y,z = tc.tensor(21.79),tc.tensor(36.24),tc.tensor(30)
+
+stations = pp.ListOfReceivers(tc.tensor([22.383514667,1,1,1,1,1]),tc.tensor([36.493270697,1,1,1,1,1]),depth=3,geometry='spherical')
+source = pp.PointSource(x,y,z,rtf2xyz(make_moment_tensor(strike,dip,rake,M0,eta,xtra)),F, 0.)
 tt,seis = pp.compute_seismograms(model_table_1,source,stations,240,0.5,xyz=True,source_time_function=lambda w:stf_cosine_boxcar(w,4.5,ratio=0.33))
+seis = seis[0]
 fig = plt.figure()
 ax = fig.add_subplot(111)
 ax.plot(tt,seis[0,:])

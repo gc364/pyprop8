@@ -1,7 +1,10 @@
+import sys
+sys.path.insert(1,'/Users/Oscar/OneDrive - Durham University/University/Year3/pyprop8/src')
 import pyprop8 as pp
 from pyprop8.utils import rtf2xyz,make_moment_tensor,stf_trapezoidal,stf_cosine,latlon2xy,clp_filter
 import numpy as np
 import matplotlib.pyplot as plt
+import torch as tp
 
 '''This example aims to reproduce the first couple of figures presented in
 O'Toole, Valentine & Woodhouse (2012, doi: 10.1111/j.1365-246X.2012.05608.x).
@@ -12,20 +15,21 @@ code.
 '''
 
 # Table 1:
-model = pp.LayeredStructureModel(np.array([[ 0.10, 3.20, 2.00, 2.10],
+model = pp.LayeredStructureModel([[ 0.10, 3.20, 2.00, 2.10],
                                            [ 1.90, 5.15, 2.85, 2.50],
                                            [ 3.00, 5.50, 3.20, 2.60],
                                            [13.00, 6.00, 3.46, 2.70],
                                            [14.00, 6.70, 3.87, 2.80],
-                                           [np.inf,7.70, 4.30, 3.30]]))
+                                           [np.inf,7.70, 4.30, 3.30]]
+                                           )
 print(model)
 
-stations = pp.RegularlyDistributedReceivers(39.6,39.6,1,90-118.2,90-118.2,1,degrees=True).asListOfReceivers()
+stations = pp.RegularlyDistributedReceivers(39.6,39.6,5,90-118.2,90-118.2,5,degrees=True).asListOfReceivers()
 
 # Table 2, 'Iteration 0' column
-event = pp.PointSource(0,0,35,rtf2xyz(np.array([[ 0.3406, 0.0005, 0.1610],
-                                                [ 0.0005, 0.7798, 0.1430],
-                                                [ 0.1610, 0.1430, 0.6349]])),np.array([[0.],[0.],[0.]]),0)
+event = pp.PointSource(tp.tensor(0),tp.tensor(0),tp.tensor(np.deg2rad(35)),rtf2xyz(tp.tensor([[ 0.3406, 0.0005, 0.1610],
+                                                                                [ 0.0005, 0.7798, 0.1430],
+                                                                                [ 0.1610, 0.1430, 0.6349]])),tp.tensor([[0.],[0.],[0.]]),0)
 drv = pp.DerivativeSwitches(moment_tensor=True,z=True,x=True,y=True,time=True)
 
 # Appears that the paper just uses the cosine low-pass filter
@@ -33,7 +37,8 @@ drv = pp.DerivativeSwitches(moment_tensor=True,z=True,x=True,y=True,time=True)
 
 stf = lambda w: clp_filter(w,0.05*2*np.pi,0.2*2*np.pi)
 tt,seis,deriv = pp.compute_seismograms(model,event,stations,81,0.5,source_time_function = stf,derivatives=drv,pad_frac=0.5)
-
+seis = seis[0]
+deriv = deriv[0]
 nez = [1,0,2] #Reorder seismogram components to match O'Toole's figure
 # Native ordering of moment tensor components is as follows:
 #    Mxx, Myy, Mzz, Mxy, Mxz, Myz
