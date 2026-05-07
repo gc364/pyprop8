@@ -58,8 +58,9 @@ ax = fig.add_subplot(313)
 ax.set_title("Vertical")
 for i in range(18):
     ax.plot(tt,seis[i,2,:]-50*i,'k')
-plt.show()
 plt.savefig(f'{figpath}/OW11_fig1.png',dpi=256)
+plt.show()
+
 
 ### Figure 2 ###
 
@@ -98,8 +99,9 @@ ax.set_aspect(.1)
 c = plt.colorbar(sc,cax=ax,orientation='horizontal',label='Displacement (mm)')
 c.set_ticks([-amax,0,amax])
 plt.tight_layout()
-plt.show()
 plt.savefig(f'{figpath}/OW11_fig2.png',dpi=256)
+plt.show()
+
 ### Figure 3
 stations = pp.RegularlyDistributedReceivers(100,110,9,80,90,9)
 
@@ -149,8 +151,9 @@ ax.set_xlim(0,120)
 ax.set_xticks([0,60,120])
 ax.set_xlabel("Time (s)")
 plt.tight_layout()
-plt.show()
 plt.savefig(f'{figpath}/OW11_fig3.png',dpi=256)
+plt.show()
+
 ### Figure 4 ###
 # Only the model is different...
 tt,seis = pp.compute_seismograms(model_table_2,source,stations,240,0.5,xyz=True,source_time_function = lambda w:stf_trapezoidal(w,6,3))
@@ -193,8 +196,9 @@ ax.set_xlim(0,120)
 ax.set_xticks([0,60,120])
 ax.set_xlabel("Time (s)")
 plt.tight_layout()
-plt.show()
 plt.savefig(f'{figpath}/OW11_fig4.png',dpi=256)
+plt.show()
+
 ### Figure 5 ###
 # The paper does not unambiguously define the precise setup and processing used
 # in this experiment, and the code I have from O'Toole is not sufficient to
@@ -218,5 +222,6 @@ ax.set_xlim(0,120)
 ax.set_xlabel("Time (s)")
 ax.set_ylabel("Displacement (mm)")
 plt.tight_layout()
-plt.show()
 plt.savefig(f'{figpath}/OW11_fig5.png',dpi=256)
+plt.show()
+

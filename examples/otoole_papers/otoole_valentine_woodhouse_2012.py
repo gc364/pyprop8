@@ -107,8 +107,9 @@ proxy[0].set_label('Auto-Diff')
 proxyp[0].set_label('pyprop8')
 ax.legend()
 plt.tight_layout()
-plt.show()
 plt.savefig(f'{figpath}/OVW12_fig1.png',dpi=256)
+plt.show()
+
 
 fig = plt.figure()
 deriv[drv.i_z,:,:]*=10
@@ -145,5 +146,5 @@ for icomp in range(3):
     ax.axis('off')
     if icomp==0: ax.text(0,.7,"HRGPS synthetic",transform=ax.transAxes)
 plt.tight_layout()
-plt.show()
 plt.savefig(f'{figpath}/OVW12_fig2.png',dpi=256)
+plt.show()
