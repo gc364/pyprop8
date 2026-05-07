@@ -21,7 +21,11 @@ For the avoidance of doubt: the examples presented in the above papers were
 generated using a Fortran implementation of the algorithm (`prop8`), and not
 with the current package.
 """
-
+import sys
+import os
+print(os.path.dirname(os.path.dirname(__file__)))
+if os.path.dirname(os.path.dirname(__file__)) not in sys.path:
+      sys.path.insert(1,os.path.dirname(os.path.dirname(__file__)))
 
 from ._core import (
     LayeredStructureModel,

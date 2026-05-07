@@ -1,5 +1,5 @@
-import sys
-sys.path.insert(1,'/Users/Oscar/OneDrive - Durham University/University/Year3/pyprop8/src')
+# import sys
+# sys.path.insert(1,'/Users/Oscar/Documents/pyprop8/src')
 import pyprop8 as pp
 from pyprop8.utils import rtf2xyz,make_moment_tensor,stf_trapezoidal,stf_cosine,latlon2xy,clp_filter
 import numpy as np
@@ -98,13 +98,16 @@ for idrv in range(6):
             elif icomp == 2:
                 ax.set_title("Vertical")
         ax.plot(tt,np.zeros_like(tt),'k:')
-        ax.plot(tt,dcompsign[idrv]*deriv[drv.i_mt+dcomp[idrv],nez[icomp],:])
-        ax.plot(tt,pt_derivs[drv.i_mt+idrv,nez[icomp],:],'r--')
+        proxyp = ax.plot(tt,dcompsign[idrv]*deriv[drv.i_mt+dcomp[idrv],nez[icomp],:])
+        proxy = ax.plot(tt,pt_derivs[drv.i_mt+idrv,nez[icomp],:],'r--')
         ax.set_ylim(-amax,amax)
         ax.set_xticks([])
         ax.set_yticks([])
         ax.axis('off')
         if icomp==0: ax.text(0,.7,complabel[idrv],transform=ax.transAxes)
+proxy[0].set_label('Auto-Diff')
+proxyp[0].set_label('pyprop8')
+ax.legend()
 plt.tight_layout()
 plt.show()
 

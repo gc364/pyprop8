@@ -1,4 +1,2 @@
-pyprop8
-numpy
 matplotlib
-torch
+tqdm
