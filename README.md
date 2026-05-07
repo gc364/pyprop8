@@ -1,5 +1,33 @@
 [![DOI](https://joss.theoj.org/papers/10.21105/joss.04217/status.svg)](https://doi.org/10.21105/joss.04217) [![PyPI version](https://badge.fury.io/py/pyprop8.svg)](https://badge.fury.io/py/pyprop8) [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/valentineap/pyprop8/HEAD?labpath=examples%2Fdemo.ipynb)
 
+#   torchprop8
+This implementation holds the autodiff compatible `pytorch` extension of `pyprop8`.
+
+##  Gradients
+
+The gradients calcualted will be the gradient of the output with respect to the input (dd/dm). The output can be any manipulation of the output
+seismogram such as a scalar loss function, a window of the seismogram or the entire seismogram itself. To do these simply carry out any computations
+after the generation of the seismogram within `pytorch`.
+
+The `test.py` file and the files in `examples/otoole_papers` have examples of computing forward wavefields and gradients, and also serve as a sanity
+check that both the forward wavefields and gradients are correct by comparison with `prop8a` output for the forward wavefields and comparison of
+excitation kernels computed by pyprop8 and kernels found by autodiff (thankfully they're identical). 
+
+
+##  Notes
+These are some things to note when using the `pytorch` version. 
+1.  Any angles that *are not* latitude and longitudes *must* be in radians before being passed to `pyprop`
+    This is as the `deg2rad` does not have a grad function, so will stall on the gradient accumulation.
+
+2.  The inputs must all be a `torch.Tensor` not a `numpy.ndarray`. You'll know if you've missed anything as error will be thrown
+
+3.  The number of receivers must be greater than 5. If not you'll hit a type error during the integration. I will fix this
+    properly soon but the cause is elusive, so for now it's easier to just pick more than 5 receivers and only use the ones you're
+    interested in.
+
+
+
+
 # pyprop8
 
 This package provides a lightweight Python implementation of the seismogram calculation algorithm set out in [O'Toole & Woodhouse (2011)](https://doi.org/10.1111/j.1365-246X.2011.05210.x), together with the source derivatives set out in [O'Toole, Valentine & Woodhouse (2012)](https://doi.org/10.1111/j.1365-246X.2012.05608.x). It is intended to provide a lightweight, easy-to-install seismological forward model suitable for use in teaching and research (in particular, to provide a computationally-cheap yet physically-realistic forward problem for use in the development and testing of inversion algorithms).

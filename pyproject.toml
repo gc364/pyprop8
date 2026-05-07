@@ -4,3 +4,9 @@ requires = [
     "wheel"
 ]
 build-backend = "setuptools.build_meta"
+dependencies = [
+    'torch',
+    'numpy',
+    'scipy',
+    'BesselFuncs@git+https://github.com/gc364/BesselFuncs.git'
+]
