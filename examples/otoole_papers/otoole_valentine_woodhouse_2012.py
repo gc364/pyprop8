@@ -27,9 +27,14 @@ stations = pp.RegularlyDistributedReceivers(39.6,39.6,5,90-118.2,90-118.2,5,degr
 
 # Table 2, 'Iteration 0' column
 
+
+#   Use .requires_grad_() on tensors we want to differentiate back to
 Mrtf = tp.tensor([[ 0.3406, 0.0005, 0.1610],
                 [ 0.0005, 0.7798, 0.1430],
                 [ 0.1610, 0.1430, 0.6349]]).requires_grad_()
+
+
+#   Run pyprop8 as usual
 
 event = pp.PointSource(tp.tensor(0),tp.tensor(0),tp.tensor(35),rtf2xyz(Mrtf),tp.tensor([[0.],[0.],[0.]]),0)
 drv = pp.DerivativeSwitches(moment_tensor=True,z=True,x=True,y=True,time=True)
@@ -42,29 +47,43 @@ tt,seis,deriv = pp.compute_seismograms(model,event,stations,81,0.5,source_time_f
 seis = seis[0]
 deriv = deriv[0]
 
+#   Autodiff excitation kernels
+
 pt_derivs = tp.zeros_like(deriv) #(6,3,nt)
 deriv = deriv.detach().numpy()
+
 for i in range(seis.shape[0]):
     for j in tqdm(range(seis.shape[1])):
+        #   The initial gradient, for excitation kernels we
+        #   compute the gradient of the model wrt to each timestep
         g0 = tp.zeros_like(seis)
         g0[i,j] = 1
+        #   Backpropagate
         seis.backward(g0,retain_graph=True)
+        #   Extract the acccumulated gradients
         grad = Mrtf.grad
-        #   Just diagonal for now
+
+        #   Diagonal
         for k in range(3):
             pt_derivs[k,i,j] = grad[k,k]
         inds = [[0,1],[0,2],[1,2]]
-      
+
+        #   Off diagonal terms
         k=3
         for ind in inds:
             pt_derivs[k,i,j] = grad[ind[0],ind[1]]
             pt_derivs[k,i,j] += grad[ind[1],ind[0]]
             k+=1
 
+        #   Zero the gradients after
         Mrtf.grad = tp.zeros_like(Mrtf)
 
+#   Detach both tensors from the graph before plotting
 pt_derivs = pt_derivs.detach().numpy()
 seis = seis.detach().numpy()
+
+#   Everyhtings the same from here
+
 nez = [1,0,2] #Reorder seismogram components to match O'Toole's figure
 # Native ordering of moment tensor components is as follows:
 #    Mxx, Myy, Mzz, Mxy, Mxz, Myz

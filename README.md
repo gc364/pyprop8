@@ -31,17 +31,16 @@ A list of projects that have made use of `pyprop8` can be found [here](USERS.md)
 
 ## Installation
 
-The easiest way to get this package is through `pip`, e.g.
-```
-pip install pyprop8
-```
-Alternatively, you can clone this repository and ensure that the contents of the `src/` directory are placed somewhere where they can be found by your Python installation, e.g. by setting the $PYTHONPATH environment variable.
+To install this version of pyprop8, you will need to clone `https://github.com/gc364/pyprop8.git`, move over to the `PyTorchIntegration` branch and
+then run `pip install .` in the top level of the clone. 
 
 ## Dependencies
 
 The core functions of this package depend only on:
 - [numpy](https://numpy.org)
 - [scipy](https://scipy.org)
+- [torch]
+
 
 `pyprop8` will also use [`tqdm`](https://github.com/tqdm/tqdm) if it is available, to display progress bars. 
 
